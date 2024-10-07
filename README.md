@@ -1,1 +1,1 @@
-# hslu_devops
+# Students Repository for HSLU Module "DevOps"
