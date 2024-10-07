@@ -1,0 +1,7 @@
+customer_id;date;product_id;product_name;product_price;quantity
+1234;2024-01-01;555;Laptop;999;1
+1234;2024-01-01;666;Headphones;149;1
+1234;2024-01-02;444;Mouse;49;1
+4321;2024-01-05;666;Headphones;149;2
+4321;2024-01-02;444;Mouse;49;3
+7234;2024-01-05;666;Headphones;100;1
