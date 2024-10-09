@@ -8,7 +8,7 @@ Simulation.prototype.main = function(){
     this.init_websocket();
 };
 Simulation.prototype.init_websocket = function(){
-    this.ws = new WebSocket(this.config.server_url);
+    this.ws = new WebSocket(this.config.ws_endpoint);
     this.ws.onopen = this.ws_onopen.bind(this);
     this.ws.onmessage = this.ws_onmessage.bind(this);
 }

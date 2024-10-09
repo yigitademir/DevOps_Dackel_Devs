@@ -285,8 +285,6 @@ Game.prototype.set_player_state = function(player_state) {
 	this.list_ball_selectable_from = [];
 	this.list_ball_selectable_to = [];
 	this.player_state = player_state;
-	//this.player_state.list_player[0].list_id_card[2] = 'JKR';
-	//this.player_state.list_player[0].list_id_card[3] = '2_H';
 	
 	this.calc_board_rotation();
 	this.calc_objects_rect();
@@ -960,10 +958,19 @@ Game.prototype.render = function () {
 				}
 				*/
 			}
+			if(this.player_state['list_player_names']!=undefined) {
+				this.ctx.font = '24px Arial';
+				this.ctx.textBaseline = 'middle';
+				var txt = this.player_state['list_player_names'][p];
+				var w = this.ctx.measureText(txt).width/2;
+				this.ctx.fillStyle = 'black';
+				var offset = (1-p)*(this.board_width/2+22);
+				this.ctx.fillText(txt, this.board_center_x-w, this.board_center_y+offset);
+			}
 		} else {
-				this.ctx.save();
-				this.ctx.translate(this.board_center_x, this.board_center_y);
-				this.ctx.rotate(-Math.PI / 2);
+			this.ctx.save();
+			this.ctx.translate(this.board_center_x, this.board_center_y);
+			this.ctx.rotate(-Math.PI / 2);
 			for(var i=0; i<this.player_state.list_player[p].list_card.length; i++) {
 				var card = this.player_state.list_player[p].list_card[i];
 				var rect = this.dict_player_card_rect.list_player[p][i];
@@ -981,7 +988,16 @@ Game.prototype.render = function () {
 				}
 				*/
 			}
-				this.ctx.restore();
+			if(this.player_state['list_player_names']!=undefined) {
+				this.ctx.font = '24px Arial';
+				this.ctx.textBaseline = 'middle';
+				var txt = this.player_state['list_player_names'][p];
+				var w = this.ctx.measureText(txt).width/2;
+				this.ctx.fillStyle = 'black';
+				var offset = (2-p)*(this.board_width/2+22);
+				this.ctx.fillText(txt, -w/2, offset);
+			}
+			this.ctx.restore();
 		}
 	}
 

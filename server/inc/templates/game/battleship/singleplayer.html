@@ -14,8 +14,8 @@
 <script>
     $(function(){
         var singleplayer = new Singleplayer({
-            'server_url': 'ws://localhost:8000/battleship/singleplayer/ws',
-            'delay_millis': 0,
+            'ws_endpoint': '/battleship/singleplayer/ws',
+            'delay_millis': 100,
             'game_config': {
                 'canvas_id': 'board',
                 'img_path': '/inc/static/game/battleship/img/',

@@ -79,18 +79,6 @@ function Game(config) {
 	}
 	this.ID_AREA_DRAW = 'draw';
 	this.ID_AREA_DISCARD = 'discard';
-
-	this.ID_BUTTON_SUBMIT = 'submit';
-	this.ID_AREA_CARDS = 'cards';
-	this.ID_AREA_EXCHANGE_CARDS = 'exchange_cards';
-	this.ID_AREA_BOARD = 'baord';
-	this.CNT_PLAYERS = 4
-	this.CNT_BALLS = 4
-	this.CNT_POS = 96
-	this.CNT_STEPS = 64
-	this.list_xy_pos = null;
-	this.dict_player_card_rect = null;
-	this.dict_exchange_card_rect = null;
 	this.dict_area_rect = null;
 	this.list_card_selectable = null;
 	this.list_ball_selectable_from = null;
@@ -223,7 +211,8 @@ Game.prototype.calc_objects_rect = function() {
 	var x_center = this.canvas_width / 2;
 	var y_center = this.canvas_height / 2;
 	var r = x_center*0.95;
-	var r_txt_cnt_cards = x_center*0.91;
+	var r_txt_cnt_cards = x_center*0.88;
+	var r_txt_name = x_center*0.95;
 	var r_txt_winner = x_center*0.61;
 	var r2 = 160;
 	var f = 0.33;
@@ -284,6 +273,8 @@ Game.prototype.calc_objects_rect = function() {
 		var player = this.state.list_player[i];
 		player.x_txt_cnt_cards = x_center - Math.cos(alpha)*r_txt_cnt_cards;
 		player.y_txt_cnt_cards = y_center + Math.sin(alpha)*r_txt_cnt_cards;
+		player.x_txt_name = x_center - Math.cos(alpha)*r_txt_name;
+		player.y_txt_name = y_center + Math.sin(alpha)*r_txt_name;
 		player.x_txt_winner = x_center - Math.cos(alpha)*r_txt_winner;
 		player.y_txt_winner = y_center + Math.sin(alpha)*r_txt_winner;
 		player.x_callout = player.x_txt_winner+Math.cos(-alpha+Math.PI/2)*120+Math.cos(-alpha)*50;
@@ -766,6 +757,23 @@ Game.prototype.render = function () {
 			var y = player.y_txt_winner;
 		}
 		this.ctx.fillText(txt, x, y);
+
+		// player names
+		if(this.state['list_player_names']!=undefined) {
+			this.ctx.font = '24px Arial';
+			this.ctx.textBaseline = 'middle';
+			var txt = this.state['list_player_names'][i];
+			var w = this.ctx.measureText(txt).width/2;
+			var x = player.x_txt_name;
+			var y = player.y_txt_name;
+			var a = i%2*-Math.PI/2;
+			this.ctx.fillStyle = 'black';
+			this.ctx.save();
+			this.ctx.translate(x, y);
+			this.ctx.rotate(a);
+			this.ctx.fillText(txt, -w, 0);
+			this.ctx.restore();
+		}
 
 		if(player.list_card.length==2) {
 			var show = this.config.spectator;
