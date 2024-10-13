@@ -1,6 +1,5 @@
 from server.py.game import Game, Player
 from typing import List, Optional
-from pydantic import BaseModel
 from enum import Enum
 import random
 
@@ -10,36 +9,38 @@ class ActionType(str, Enum):
     SHOOT = 'shoot'
 
 
-class BattleshipAction(BaseModel):
-    type: ActionType
-    ship_name: Optional[str]
-    location: List[str]
+class BattleshipAction:
+
+    def __init__(self, type: ActionType, ship_name: Optional[str], location: List[str]) -> None:
+        self.type = type
+        self.ship_name = ship_name
+        self.location = location
 
 
-class Ship(BaseModel):
-    name: str
-    length: int
-    location: Optional[List[str]] = None
+class Ship:
+
+    def __init__(self, name: str, length: int, location: Optional[List[str]]) -> None:
+        self.name = name
+        self.length = length
+        self.location = location
 
 
-class PlayerState(BaseModel):
-    name: str
-    ships: List[Ship] = [
-        Ship(name="carrier", length=5),
-        Ship(name="battleship", length=4),
-        Ship(name="cruiser", length=3),
-        Ship(name="submarine", length=3),
-        Ship(name="destroyer", length=2),
-    ]
-    shots: List[str] = []
-    successful_shots: List[str] = []
+class PlayerState:
+
+    def __init__(self, name: str, ships: List[Ship], shots: List[str], successful_shots: List[str]) -> None:
+        self.name = name
+        self.ships = ships
+        self.shots = shots
+        self.successful_shots = successful_shots
 
 
-class BattleshipGameState(BaseModel):
-    idx_player_active: int
-    is_finished: bool
-    winner: Optional[int]
-    players: List[PlayerState]
+class BattleshipGameState:
+
+    def __init__(self, idx_player_active: int, is_finished: bool, winner: Optional[int], players: List[PlayerState]) -> None:
+        self.idx_player_active = idx_player_active
+        self.is_finished = is_finished
+        self.winner = winner
+        self.players = players
 
 
 class Battleship(Game):
