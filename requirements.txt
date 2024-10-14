@@ -9,3 +9,7 @@ colorama
 mypy==1.10.0
 pytest==8.2.1
 coverage==7.5.1
+scikit-learn
+matplotlib
+seaborn
+python-multipart

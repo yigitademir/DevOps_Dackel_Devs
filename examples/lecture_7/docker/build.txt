@@ -1,0 +1,2 @@
+docker build -t house_price_prediction_image .
+docker run -d --name house_price_prediction_container -p 888:8080 house_price_prediction_image 
