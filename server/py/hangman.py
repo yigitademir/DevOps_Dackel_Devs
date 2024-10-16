@@ -27,6 +27,7 @@ class HangmanGameState:
 class Hangman(Game):
 
     def __init__(self) -> None:
+        """ Important: Game initialization also requires a set_state call to set the 'word_to_guess' """
         pass
 
     def get_state(self) -> HangmanGameState:
@@ -68,4 +69,3 @@ if __name__ == "__main__":
     game = Hangman()
     game_state = HangmanGameState(word_to_guess='DevOps', guesses=[], phase=GamePhase.SETUP)
     game.set_state(game_state)
-
