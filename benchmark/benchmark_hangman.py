@@ -12,7 +12,11 @@ class HangmanBenchmark(Benchmark):
         state = HangmanGameState(word_to_guess='devops', guesses=[], phase=GamePhase.RUNNING)
         self.game_server.set_state(state)
         game_state = self.game_server.get_state()
-        assert state == game_state, "Applying 'set_state' and then 'get_state' returns a different state"
+        hint = "Applying 'set_state' and then 'get_state' returns a different state"
+        assert state.word_to_guess == game_state.word_to_guess, hint
+        assert state.guesses == game_state.guesses, hint
+        assert state.phase == game_state.phase, hint
+
 
     def test_action_list(self) -> None:
         """Test 002: Action list contains only 'unused' capital letters [1 point]"""
