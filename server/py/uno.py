@@ -22,7 +22,7 @@ class Action(BaseModel):
 
 
 class PlayerState(BaseModel):
-    name: str = None            # name of player
+    name: Optional[str] = None  # name of player
     list_card: List[Card] = []  # list of cards
 
 
@@ -77,6 +77,7 @@ class GameState(BaseModel):
 class Uno(Game):
 
     def __init__(self) -> None:
+        """ Important: Game initialization also requires a set_state call to set the number of players """
         pass
 
     def set_state(self, state: GameState) -> None:
@@ -106,7 +107,7 @@ class Uno(Game):
 
 class RandomPlayer(Player):
 
-    def select_action(self, state: GameState, actions: List[Action]) -> Action:
+    def select_action(self, state: GameState, actions: List[Action]) -> Optional[Action]:
         """ Given masked game state and possible actions, select the next action """
         if len(actions) > 0:
             return random.choice(actions)
@@ -114,7 +115,7 @@ class RandomPlayer(Player):
 
 
 if __name__ == '__main__':
+
     uno = Uno()
-    uno.print_state()
     state = GameState(cnt_player=3)
     uno.set_state(state)
