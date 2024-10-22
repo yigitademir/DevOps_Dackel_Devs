@@ -1,8 +1,7 @@
-from server.py.game import Game, Player
 from typing import List, Optional
-from pydantic import BaseModel
 from enum import Enum
 import random
+from server.py.game import Game, Player
 
 
 class ActionType(str, Enum):
@@ -10,41 +9,50 @@ class ActionType(str, Enum):
     SHOOT = 'shoot'
 
 
-class BattleshipAction(BaseModel):
-    type: ActionType
-    ship_name: Optional[str]
-    location: List[str]
+class BattleshipAction:
+
+    def __init__(self, action_type: ActionType, ship_name: Optional[str], location: List[str]) -> None:
+        self.action_type = action_type
+        self.ship_name = ship_name # only for set_ship actions
+        self.location = location
 
 
-class Ship(BaseModel):
-    name: str
-    length: int
-    location: Optional[List[str]] = None
+class Ship:
+
+    def __init__(self, name: str, length: int, location: Optional[List[str]]) -> None:
+        self.name = name
+        self.length = length
+        self.location = location
 
 
-class PlayerState(BaseModel):
-    name: str
-    ships: List[Ship] = [
-        Ship(name="carrier", length=5),
-        Ship(name="battleship", length=4),
-        Ship(name="cruiser", length=3),
-        Ship(name="submarine", length=3),
-        Ship(name="destroyer", length=2),
-    ]
-    shots: List[str] = []
-    successful_shots: List[str] = []
+class PlayerState:
+
+    def __init__(self, name: str, ships: List[Ship], shots: List[str], successful_shots: List[str]) -> None:
+        self.name = name
+        self.ships = ships
+        self.shots = shots
+        self.successful_shots = successful_shots
 
 
-class BattleshipGameState(BaseModel):
-    idx_player_active: int
-    is_finished: bool
-    winner: Optional[int]
-    players: List[PlayerState]
+class GamePhase(str, Enum):
+    SETUP = 'setup'            # before the game has started (including setting ships)
+    RUNNING = 'running'        # while the game is running (shooting)
+    FINISHED = 'finished'      # when the game is finished
+
+
+class BattleshipGameState:
+
+    def __init__(self, idx_player_active: int, phase: GamePhase, winner: Optional[int], players: List[PlayerState]) -> None:
+        self.idx_player_active = idx_player_active
+        self.phase = phase
+        self.winner = winner
+        self.players = players
 
 
 class Battleship(Game):
 
     def __init__(self):
+        """ Game initialization (set_state call not necessary) """
         pass
 
     def print_state(self) -> None:
@@ -74,8 +82,13 @@ class Battleship(Game):
 
 class RandomPlayer(Player):
 
-    def select_action(self, state: BattleshipGameState, actions: List[BattleshipAction]) -> BattleshipAction:
+    def select_action(self, state: BattleshipGameState, actions: List[BattleshipAction]) -> Optional[BattleshipAction]:
         """ Given masked game state and possible actions, select the next action """
         if len(actions) > 0:
             return random.choice(actions)
         return None
+
+
+if __name__ == "__main__":
+
+    game = Battleship()

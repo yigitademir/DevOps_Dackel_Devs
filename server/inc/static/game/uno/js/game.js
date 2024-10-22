@@ -766,7 +766,7 @@ Game.prototype.render = function () {
 			var w = this.ctx.measureText(txt).width/2;
 			var x = player.x_txt_name;
 			var y = player.y_txt_name;
-			var a = i%2*-Math.PI/2;
+			var a = i%2*+Math.PI/2;
 			this.ctx.fillStyle = 'black';
 			this.ctx.save();
 			this.ctx.translate(x, y);

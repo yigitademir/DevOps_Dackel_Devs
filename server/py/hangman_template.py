@@ -1,12 +1,13 @@
 from typing import List, Optional
 import random
 from enum import Enum
-from pydantic import BaseModel
 from server.py.game import Game, Player
 
 
-class GuessLetterAction(BaseModel):
-    letter: str
+class GuessLetterAction:
+
+    def __init__(self, letter: str) -> None:
+        self.letter = letter
 
 
 class GamePhase(str, Enum):
@@ -15,15 +16,18 @@ class GamePhase(str, Enum):
     FINISHED = 'finished'      # when the game is finished
 
 
-class HangmanGameState(BaseModel):
-    word_to_guess: str = ""
-    guesses: List[str] = []
-    phase: GamePhase = GamePhase.SETUP
+class HangmanGameState:
+
+    def __init__(self, word_to_guess: str, guesses: List[str], phase: GamePhase) -> None:
+        self.word_to_guess = word_to_guess
+        self.guesses = guesses
+        self.phase = phase
 
 
 class Hangman(Game):
 
     def __init__(self) -> None:
+        """ Important: Game initialization also requires a set_state call to set the 'word_to_guess' """
         pass
 
     def get_state(self) -> HangmanGameState:
@@ -63,6 +67,5 @@ class RandomPlayer(Player):
 if __name__ == "__main__":
 
     game = Hangman()
-    game_state = HangmanGameState(word_to_guess='DevOps')
+    game_state = HangmanGameState(word_to_guess='DevOps', guesses=[], phase=GamePhase.SETUP)
     game.set_state(game_state)
-

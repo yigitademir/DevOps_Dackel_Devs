@@ -74,11 +74,18 @@ Game.prototype.calc_objects_rect = function () {
 		var shiptype = this.list_shiptypes[i];
 		shiptype.rect = this.get_rect(this.x_grid_left, shiptype.i, shiptype.j, shiptype.length, shiptype.is_vertical);
 		shiptype.is_hidden = false;
+		let num_3_ships_set = 0;
 		for(var j=0; j<player.ships.length; j++) {
 			var ship = player.ships[j];
-			if(shiptype.ship_name==ship.name && ship.location!=null) {
+			if(shiptype.length==ship.length && ship.location!=null) {
 				shiptype.is_hidden = true;
+				if(ship.length==3) {
+					num_3_ships_set++
+				}
 			}
+		}
+		if(shiptype.length==3 && num_3_ships_set!=2) {
+			shiptype.is_hidden = false;
 		}
 
 	}
@@ -179,7 +186,7 @@ Game.prototype.transform_state = function (raw_state) {
 
 	if(raw_state.selected_action!=null) {
 		var action = raw_state.selected_action;
-		if(action.type == 'set_ship') {
+		if(action.action_type == 'set_ship') {
 			var ij = this.get_ij(action.location[0]);
 			action.i = ij[0];
 			action.j = ij[1];
@@ -196,11 +203,11 @@ Game.prototype.transform_state = function (raw_state) {
 			var ij = this.get_ij(action.location[0]);
 			action.i = ij[0];
 			action.j = ij[1];
-			if(action.type == 'set_ship') {
+			if(action.action_type == 'set_ship') {
 				action.is_vertical = action.location[0].substr(0,1) == action.location[1].substr(0,1);
 				action.length = action.location.length;
 				action.rect = this.get_rect(this.x_grid_left, action.i, action.j, action.length, action.is_vertical);
-			} else if(action.type == 'shoot') {
+			} else if(action.action_type == 'shoot') {
 				action.rect = this.get_rect(this.x_grid_right, action.i, action.j, 1, action.is_vertical);
 			}
 		}
@@ -413,7 +420,7 @@ Game.prototype.calc_selectable = function() {
 			var is_selectable = false;
 			for(var i=0; i<this.player_state.list_action.length; i++) {
 				var action = this.player_state.list_action[i];
-				if(ship.ship_name == action.ship_name && ship.is_vertical == action.is_vertical) {
+				if(ship.length == action.length && ship.is_vertical == action.is_vertical) {
 					is_selectable = true;
 					break;
 				}
@@ -426,7 +433,7 @@ Game.prototype.calc_selectable = function() {
 			var ship_selected = this.list_shiptypes[this.selection_state.i_shiptype_selected];
 			for(var i=0; i<this.player_state.list_action.length; i++) {
 				var action = this.player_state.list_action[i];
-				action.is_selectable = ship_selected.ship_name == action.ship_name && ship_selected.is_vertical == action.is_vertical;
+				action.is_selectable = ship_selected.length == action.length && ship_selected.is_vertical == action.is_vertical;
 			}
 		}
 
@@ -852,7 +859,7 @@ Game.prototype.render = function () {
 		var action = this.player_state.selected_action;
 		var fill_color = 'rgba(175,175,175,0.8)';
 		var stroke_color = 'red';
-		if(action.type == 'set_ship') {
+		if(action.action_type == 'set_ship') {
 			var x = this.player_state.idx_player_active==0 ? this.x_grid_left : this.x_grid_right;
 			this.render_ship(action, fill_color, stroke_color, x, this.y_grids, this.player_state.idx_player_active);				
 		}

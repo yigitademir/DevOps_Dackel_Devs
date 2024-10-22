@@ -988,7 +988,11 @@ Game.prototype.render = function () {
 				}
 				*/
 			}
+			this.ctx.restore();
 			if(this.player_state['list_player_names']!=undefined) {
+				this.ctx.save();
+				this.ctx.translate(this.board_center_x, this.board_center_y);
+				this.ctx.rotate(Math.PI / 2);
 				this.ctx.font = '24px Arial';
 				this.ctx.textBaseline = 'middle';
 				var txt = this.player_state['list_player_names'][p];
@@ -996,8 +1000,8 @@ Game.prototype.render = function () {
 				this.ctx.fillStyle = 'black';
 				var offset = (2-p)*(this.board_width/2+22);
 				this.ctx.fillText(txt, -w/2, offset);
+				this.ctx.restore();
 			}
-			this.ctx.restore();
 		}
 	}
 
