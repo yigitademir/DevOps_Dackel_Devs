@@ -18,10 +18,11 @@ class GamePhase(str, Enum):
 
 class HangmanGameState:
 
-    def __init__(self, word_to_guess: str, guesses: List[str], phase: GamePhase) -> None:
+    def __init__(self, word_to_guess: str, phase: GamePhase, guesses: List[str] = [], incorrect_guesses: List[str] = []) -> None:
         self.word_to_guess = word_to_guess
-        self.guesses = guesses
         self.phase = phase
+        self.guesses = guesses
+        self.incorrect_guesses = incorrect_guesses
 
 
 class Hangman(Game):
