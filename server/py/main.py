@@ -44,7 +44,7 @@ async def hangman_singleplayer_ws(websocket: WebSocket):
             words = json.load(fin)
         word_to_guess = random.choice(words)
 
-        state = hangman.HangmanGameState(word_to_guess=word_to_guess, guesses=[], phase=hangman.GamePhase.RUNNING)
+        state = hangman.HangmanGameState(word_to_guess=word_to_guess, phase=hangman.GamePhase.RUNNING, guesses=[], incorrect_guesses=[])
         game.set_state(state)
 
         while True:
