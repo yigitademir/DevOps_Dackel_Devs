@@ -1,0 +1,16 @@
+# add missing code
+jobs:
+  deploy-job:
+    # add missing code
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      # add missing steps
+      - name: Authenticate Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          service_account: "Google Cloud Service Account (see Google Team Spreadsheet)"
+          project_id: "Google Cloud project id (see Google Team Spreadsheet)"
+          workload_identity_provider: "Google Cloud Workload Identity Provider (see Google Team Spreadsheet)"
+      # add missings steps
