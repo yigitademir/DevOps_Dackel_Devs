@@ -1,3 +1,4 @@
+from mimetypes import guess_type
 from typing import List, Optional
 import random
 from enum import Enum
@@ -29,14 +30,19 @@ class Hangman(Game):
 
     def __init__(self) -> None:
         """ Important: Game initialization also requires a set_state call to set the 'word_to_guess' """
-        pass
+        super().__init__()
+        self.word_to_guess = Optional[str] = None
+        self.phase: GamePhase = GamePhase.SETUP
+        self.guesses: List[str] = []
+        self.incorrect_guesses: List[str] = []
+
 
     def get_state(self) -> HangmanGameState:
-        """ Set the game to a given state """
+        """ Get the complete, unmasked game state """
         pass
 
     def set_state(self, state: HangmanGameState) -> None:
-        """ Get the complete, unmasked game state """
+        """ Set the game to a given state """
         pass
 
     def print_state(self) -> None:
