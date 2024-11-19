@@ -31,10 +31,7 @@ class Hangman(Game):
     def __init__(self) -> None:
         """ Important: Game initialization also requires a set_state call to set the 'word_to_guess' """
         super().__init__()
-        self.word_to_guess = Optional[str] = None
-        self.phase: GamePhase = GamePhase.SETUP
-        self.guesses: List[str] = []
-        self.incorrect_guesses: List[str] = []
+        self.set_state(game_state)
 
 
     def get_state(self) -> HangmanGameState:
@@ -43,7 +40,10 @@ class Hangman(Game):
 
     def set_state(self, state: HangmanGameState) -> None:
         """ Set the game to a given state """
-        pass
+        self.word_to_guess = state.word_to_guess
+        self.phase = state.phase
+        self.guesses = state.guesses
+        self.incorrect_guesses = state.incorrect_guesses
 
     def print_state(self) -> None:
         """ Print the current game state """
@@ -58,7 +58,7 @@ class Hangman(Game):
         pass
 
     def get_player_view(self, idx_player: int) -> HangmanGameState:
-        """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
+        """ Get the masked state for the active player (e.g. the opponent's cards are face down)"""
         pass
 
 
