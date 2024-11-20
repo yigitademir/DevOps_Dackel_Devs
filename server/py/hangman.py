@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     # Setting up a game
     game = Hangman()
-    word_to_guess = input("Word to guess is: ")
+    word_to_guess = input("Word to guess is: ").lower() # Making sure the input word has only small letters
     game_state = HangmanGameState(word_to_guess=word_to_guess, phase=GamePhase.RUNNING, guesses=[], incorrect_guesses=[]) # KK: Why do we initialise the same with a word to guess?
     game.set_state(game_state)
 
