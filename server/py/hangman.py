@@ -113,33 +113,3 @@ if __name__ == "__main__":
             game.apply_action(action)
 
     game.print_state()
-
-    #     #Display the current game state - KK: This shouldn't be in the get_state?
-    #     print("Word to guess:", game.word_to_guess)
-    #     print("Guessed letters", game.guesses)
-    #     print("Incorrect guesses:", game.incorrect_guesses)
-    #
-    #     #Ask for a guess # This is action, should be in apply action
-    #     guess = input("Guess a letter: ").lower()
-    #
-    #     #Apply the guess action
-    #     if guess in game.word_to_guess:
-    #         print(f"Good guess! {guess} is in the word.")
-    #         game.guesses.append(guess)
-    #     else:
-    #         print(f"Hmmm, {guess} is not in the word.")
-    #         game.incorrect_guesses.append(guess)
-    #
-    #     #Check if the game is over
-    #     if len(game.incorrect_guesses) >= 8:
-    #         game.phase = GamePhase.FINISHED
-    #         print("Game over, better luck next time.")
-    #     elif all(letter in game.guesses for letter in game.word_to_guess):
-    #         game.phase = GamePhase.FINISHED
-    #         print("Congratulations, you guessed the word!")
-    #
-    # #Show the final state
-    # print("Final word:", game.word_to_guess)
-    # print("Your guesses:", game.guesses)
-    # print("Incorrect guesses:", game.incorrect_guesses)
-
