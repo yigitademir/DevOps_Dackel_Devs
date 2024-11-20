@@ -36,7 +36,12 @@ class Hangman(Game):
 
     def get_state(self) -> HangmanGameState:
         """ Get the complete, unmasked game state """ # this method should return the current HangmanGameState
-        pass
+        return HangmanGameState(
+            word_to_guess=self.word_to_guess,
+            phase=self.phase,
+            guesses=self.guesses,
+            incorrect_guesses=self.incorrect_guesses
+        )
 
     def set_state(self, state: HangmanGameState) -> None:
         """ Set the game to a given state """
