@@ -52,7 +52,13 @@ class Hangman(Game):
 
     def print_state(self) -> None:
         """ Print the current game state """ # this method should output the masked word, showing correctly guessed letters and hiding others.
-        pass
+        masked_word = ''.join(
+            letter if letter in self.guesses else '_'
+            for letter in self.word_to_guess
+        )
+        print(f"Word: {masked_word}")
+        print(f"Incorrect guesses: {', '.join(self.incorrect_guesses)}")
+        print(f"Remaining lives: {8 - len(self.incorrect_guesses)}")
 
     def get_list_action(self) -> List[GuessLetterAction]:
         """ Get a list of possible actions for the active player """
