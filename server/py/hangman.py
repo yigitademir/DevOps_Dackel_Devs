@@ -54,7 +54,30 @@ class Hangman(Game):
         pass
 
     def apply_action(self, action: GuessLetterAction) -> None:
-        """ Apply the given action to the game """
+        if self.phase is None or self.phase != GamePhase.RUNNING:
+            return
+
+        guess = action.letter.lower()
+
+        # Ignore already guessed letters
+        if guess in self.guesses or guess in self.incorrect_guesses:
+            return
+
+        # Apply the guess action
+        if guess in game.word_to_guess:
+            print(f"Good guess! {guess} is in the word.")
+            game.guesses.append(guess)
+        else:
+            print(f"Hmmm, {guess} is not in the word.")
+            game.incorrect_guesses.append(guess)
+
+        #Check if the game is over
+        if len(game.incorrect_guesses) >= 8:
+            game.phase = GamePhase.FINISHED
+            print("Game over, better luck next time.")
+        elif all(letter in game.guesses for letter in game.word_to_guess):
+            game.phase = GamePhase.FINISHED
+            print("Congratulations, you guessed the word!")
         pass
 
     def get_player_view(self, idx_player: int) -> HangmanGameState:
