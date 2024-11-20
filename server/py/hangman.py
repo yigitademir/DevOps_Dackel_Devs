@@ -77,6 +77,9 @@ if __name__ == "__main__":
     game_state = HangmanGameState(word_to_guess='DevOps', phase=GamePhase.SETUP, guesses=[], incorrect_guesses=[])
     game.set_state(game_state)
 
+    game_state.phase = GamePhase.RUNNING
+    game.set_state(game_state)
+
     while game.phase == GamePhase.RUNNING:
         #Display the current game state
         print("Word to guess:", game.word_to_guess)
