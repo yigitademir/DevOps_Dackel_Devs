@@ -35,7 +35,7 @@ class Hangman(Game):
 
 
     def get_state(self) -> HangmanGameState:
-        """ Get the complete, unmasked game state """
+        """ Get the complete, unmasked game state """ # this method should return the current HangmanGameState
         pass
 
     def set_state(self, state: HangmanGameState) -> None:
@@ -46,7 +46,7 @@ class Hangman(Game):
         self.incorrect_guesses = state.incorrect_guesses
 
     def print_state(self) -> None:
-        """ Print the current game state """
+        """ Print the current game state """ # this method should output the masked word, showing correctly guessed letters and hiding others.
         pass
 
     def get_list_action(self) -> List[GuessLetterAction]:
@@ -73,37 +73,50 @@ class RandomPlayer(Player):
 
 if __name__ == "__main__":
 
+    # Setting up a game
     game = Hangman()
-    game_state = HangmanGameState(word_to_guess='DevOps', phase=GamePhase.SETUP, guesses=[], incorrect_guesses=[])
+    word_to_guess = input("Word to guess is: ")
+    game_state = HangmanGameState(word_to_guess=word_to_guess, phase=GamePhase.RUNNING, guesses=[], incorrect_guesses=[]) # KK: Why do we initialise the same with a word to guess?
     game.set_state(game_state)
 
+    # Running a game
+    player = RandomPlayer() # create instance of Random Player class
     while game.phase == GamePhase.RUNNING:
-        #Display the current game state
-        print("Word to guess:", game.word_to_guess)
-        print("Guessed letters", game.guesses)
-        print("Incorrect guesses:", game.incorrect_guesses)
+        game.print_state() # Printing state of the game
+        actions = game.get_list_action() # Generate possible actions based on unused letters
+        action = player.select_action(game.get_state(), actions)
+        if action:
+            print(f"Player guesses: {action.letter}")
+            game.apply_action(action)
 
-        #Ask for a guess
-        guess = input("Guess a letter: ").lower()
+    game.print_state()
 
-        #Apply the guess action
-        if guess in game.word_to_guess:
-            print(f"Good guess! {guess} is in the word.")
-            game.guesses.append(guess)
-        else:
-            print(f"Hmmm, {guess} is not in the word.")
-            game.incorrect_guesses.append(guess)
-
-        #Check if the game is over
-        if len(game.incorrect_guesses) >= 8:
-            game.phase = GamePhase.FINISHED
-            print("Game over, better luck next time.")
-        elif all(letter in game.guesses for letter in game.word_to_guess):
-            game.phase = GamePhase.FINISHED
-            print("Congratulations, you guessed the word!")
-
-    #Show the final state
-    print("Final word:", game.word_to_guess)
-    print("Your guesses:", game.guesses)
-    print("Incorrect guesses:", game.incorrect_guesses)
+    #     #Display the current game state - KK: This shouldn't be in the get_state?
+    #     print("Word to guess:", game.word_to_guess)
+    #     print("Guessed letters", game.guesses)
+    #     print("Incorrect guesses:", game.incorrect_guesses)
+    #
+    #     #Ask for a guess # This is action, should be in apply action
+    #     guess = input("Guess a letter: ").lower()
+    #
+    #     #Apply the guess action
+    #     if guess in game.word_to_guess:
+    #         print(f"Good guess! {guess} is in the word.")
+    #         game.guesses.append(guess)
+    #     else:
+    #         print(f"Hmmm, {guess} is not in the word.")
+    #         game.incorrect_guesses.append(guess)
+    #
+    #     #Check if the game is over
+    #     if len(game.incorrect_guesses) >= 8:
+    #         game.phase = GamePhase.FINISHED
+    #         print("Game over, better luck next time.")
+    #     elif all(letter in game.guesses for letter in game.word_to_guess):
+    #         game.phase = GamePhase.FINISHED
+    #         print("Congratulations, you guessed the word!")
+    #
+    # #Show the final state
+    # print("Final word:", game.word_to_guess)
+    # print("Your guesses:", game.guesses)
+    # print("Incorrect guesses:", game.incorrect_guesses)
 
