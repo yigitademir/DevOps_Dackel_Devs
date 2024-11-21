@@ -113,9 +113,6 @@ if __name__ == "__main__":
         guess = input("Guess a letter: ").lower()
 
         #Apply the guess action
-=======
-        # Apply the guess action
->>>>>>> 388a41fbbb53d27ff0492e0eff3dfd5a40a8a964
         if guess in game.word_to_guess:
             print(f"Good guess! {guess} is in the word.")
             game.guesses.append(guess)
