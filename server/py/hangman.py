@@ -51,18 +51,17 @@ class Hangman(Game):
 
     def get_list_action(self) -> List[GuessLetterAction]:
         if self.state is None or self.state.phase != GamePhase.RUNNING:
-            return []
+            return []                        # there are no actions if GamePhase is SETUP or FINISHED
         
         all_letters = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
-        unused_letters = [i for i in all_letters if i not in self.state.guesses]
-
-        return [GuessLetterAction(letter) for letter in unused_letters]                       # there are no actions if GamePhase is SETUP or FINISHED
-                
-        
-        """ Get a list of possible actions for the active player """
-        letter = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
         probability = [8.2,1.5,2.8,4.3,12.7,2.2,2.0,6.1,7.0,0.15,0.77,4.0,2.4,6.7,7.5,1.9,0.095,6.5,6.3,9.1,2.8,0.98,2.4,0.15,2.0,0.74]
-        pass
+
+        unused_letters = [i for i in all_letters if i not in self.state.guesses]
+        unused_probabilities = [probability[all_letters.indes(i) for i in unused_letters]]
+
+        weighted_choices = random.choices(unused_letters, weights=unused_probabilities, k=len(unused_letters))
+        return [GuessLetterAction(letter) for letter in weighted_choices]                      
+                
 
     def apply_action(self, action: GuessLetterAction) -> None:
         if self.phase is None or self.phase != GamePhase.RUNNING:
