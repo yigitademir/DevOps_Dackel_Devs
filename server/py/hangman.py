@@ -68,7 +68,7 @@ class Hangman(Game):
         probability = [8.2,1.5,2.8,4.3,12.7,2.2,2.0,6.1,7.0,0.15,0.77,4.0,2.4,6.7,7.5,1.9,0.095,6.5,6.3,9.1,2.8,0.98,2.4,0.15,2.0,0.74]
 
         unused_letters = [i for i in all_letters if i not in self.state.guesses]
-        unused_probabilities = [probability[all_letters.indes(i) for i in unused_letters]]
+        unused_probabilities = [probability[all_letters.index(i)] for i in unused_letters]
 
         weighted_choices = random.choices(unused_letters, weights=unused_probabilities, k=len(unused_letters))
         return [GuessLetterAction(letter) for letter in weighted_choices]                      
