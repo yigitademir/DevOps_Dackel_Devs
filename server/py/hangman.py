@@ -51,8 +51,13 @@ class Hangman(Game):
 
     def get_list_action(self) -> List[GuessLetterAction]:
         if self.state is None or self.state.phase != GamePhase.RUNNING:
-            return []                       # there are no actions if GamePhase is SETUP or FINISHED
+            return []
         
+        all_letters = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
+        unused_letters = [i for i in all_letters if i not in self.state.guesses]
+
+        return [GuessLetterAction(letter) for letter in unused_letters]                       # there are no actions if GamePhase is SETUP or FINISHED
+                
         
         """ Get a list of possible actions for the active player """
         letter = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"]
