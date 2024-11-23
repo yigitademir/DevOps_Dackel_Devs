@@ -1,3 +1,4 @@
+from pydantic import BaseModel
 from mimetypes import guess_type
 from typing import List, Optional
 import random
@@ -5,10 +6,8 @@ from enum import Enum
 from server.py.game import Game, Player
 
 
-class GuessLetterAction:
-
-    def __init__(self, letter: str) -> None:
-        self.letter = letter
+class GuessLetterAction(BaseModel):
+    letter: str
 
 
 class GamePhase(str, Enum):
@@ -61,6 +60,7 @@ class Hangman(Game):
         print(f"Remaining lives: {8 - len(self.incorrect_guesses)}")
 
     def get_list_action(self) -> List[GuessLetterAction]:
+        """ Get a list of possible actions for the active player """
         if self.state is None or self.state.phase != GamePhase.RUNNING:
             return []                        # there are no actions if GamePhase is SETUP or FINISHED
         
@@ -73,8 +73,8 @@ class Hangman(Game):
         weighted_choices = random.choices(unused_letters, weights=unused_probabilities, k=len(unused_letters))
         return [GuessLetterAction(letter) for letter in weighted_choices]                      
                 
-
     def apply_action(self, action: GuessLetterAction) -> None:
+        """ Apply the given action to the game """
         if self.phase is None or self.phase != GamePhase.RUNNING:
             return
 
