@@ -91,4 +91,4 @@ class HangmanBenchmark(Benchmark):
 if __name__ == "__main__":
 
     benchmark = HangmanBenchmark(sys.argv)
-    benchmark.run_tests()
+    benchmark.run_tests() # Searches for all methods in the class whose names start with test_ and runs all of them
