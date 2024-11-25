@@ -17,11 +17,10 @@ class GamePhase(str, Enum):
 
 class HangmanGameState:
 
-    def __init__(self, word_to_guess: str, phase: str, guesses: List[str], incorrect_guesses: List[str]) -> None:
+    def __init__(self, word_to_guess: str, phase: str, guesses: List[str]) -> None:
         self.word_to_guess = word_to_guess
         self.phase = phase
         self.guesses = guesses
-        self.incorrect_guesses = incorrect_guesses
 
 
 class Hangman(Game):
@@ -40,7 +39,6 @@ class Hangman(Game):
             word_to_guess=self.word_to_guess,
             phase=self.phase,
             guesses=self.guesses,
-            incorrect_guesses=self.incorrect_guesses
         )
 
     def set_state(self, state: HangmanGameState) -> None:
@@ -48,7 +46,6 @@ class Hangman(Game):
         self.word_to_guess = state.word_to_guess
         self.phase = state.phase
         self.guesses = state.guesses
-        self.incorrect_guesses = state.incorrect_guesses
 
     def print_state(self) -> None:
         """ this method should output the masked word, showing correctly guessed letters and hiding others. """
@@ -106,8 +103,8 @@ class Hangman(Game):
         # Return the masked state for the player
         return HangmanGameState(word_to_guess = masked_word,
                                 phase = self.phase,
-                                guesses =self.guesses,
-                                incorrect_guesses=self.incorrect_guesses)
+                                guesses =self.guesses
+                                )
 
 class RandomPlayer(Player):
 
@@ -134,8 +131,7 @@ if __name__ == "__main__":
     game_state = HangmanGameState(
         word_to_guess=word_to_guess,
         phase=GamePhase.RUNNING,
-        guesses=[],
-        incorrect_guesses=[]
+        guesses=[]
     )
     game.set_state(game_state)
 
