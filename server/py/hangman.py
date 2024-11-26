@@ -1,12 +1,12 @@
+from pydantic import BaseModel
 from typing import List, Optional
 import random
 from enum import Enum
-from server.py.game import Game, Player
+from game import Game, Player
 
 
-class GuessLetterAction:
-    def __init__(self, letter: str):
-        self.letter = letter
+class GuessLetterAction(BaseModel):
+    letter: str
 
 
 class GamePhase(str, Enum):
