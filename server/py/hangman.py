@@ -15,13 +15,10 @@ class GamePhase(str, Enum):
     FINISHED = 'finished'      # when the game is finished
 
 
-class HangmanGameState:
-
-    def __init__(self, word_to_guess: str, phase: str, guesses: List[str]) -> None:
-        self.word_to_guess = word_to_guess
-        self.phase = phase
-        self.guesses = guesses
-
+class HangmanGameState(BaseModel):
+    word_to_guess: str
+    phase: GamePhase
+    guesses: List[str]
 
 class Hangman(Game):
 
@@ -65,7 +62,7 @@ class Hangman(Game):
         all_letters = "abcdefghijklmnopqrstuvwxyz"
         unused_letters = [i for i in all_letters if i not in self.guesses + self.incorrect_guesses]
         print(f"Unused letters: {unused_letters}")
-        return [GuessLetterAction(letter) for letter in unused_letters]
+        return [GuessLetterAction(letter=letter) for letter in unused_letters]
                 
     def apply_action(self, action: GuessLetterAction) -> None:
         """ Apply the given action to the game """
