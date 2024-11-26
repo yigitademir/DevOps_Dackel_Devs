@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 import random
 from enum import Enum
-from game import Game, Player
+from server.py.game import Game, Player
 
 
 class GuessLetterAction(BaseModel):
