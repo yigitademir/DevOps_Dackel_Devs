@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="dc7aa62a-fd7c-46a9-aaae-5b25f06ef742" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/benchmark/benchmark_hangman.py" beforeDir="false" afterPath="$PROJECT_DIR$/benchmark/benchmark_hangman.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,7 +63,7 @@
     <option name="version" value="3" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$hangman.coverage" NAME="hangman Coverage Results" MODIFIED="1732554747031" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/server/py" />
-    <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$benchmark_hangman.coverage" NAME="benchmark_hangman Coverage Results" MODIFIED="1732555715806" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/benchmark" />
+    <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$hangman.coverage" NAME="hangman Coverage Results" MODIFIED="1732610033398" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/server/py" />
+    <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$benchmark_hangman.coverage" NAME="benchmark_hangman Coverage Results" MODIFIED="1732603168369" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/benchmark" />
   </component>
 </project>
