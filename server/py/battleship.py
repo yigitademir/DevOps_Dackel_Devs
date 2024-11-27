@@ -129,9 +129,10 @@ class Battleship(Game):
                     print("Invalid placement: Coordinates must be consecutive in a straight line.")
                     continue
 
-                # If all validations pass
+                # If all validations pass, assign the location and stop the loop
                 ship.location = coordinates
                 player.ships.append(ship)
+                self.ships_to_place.remove(ship)  # Remove the ship from the list of ships to place
                 valid_placement = True
                 print(f"{ship.name} placed successfully at {', '.join(coordinates)}.")
 
