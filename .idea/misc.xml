@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Black">
+<<<<<<< HEAD
+    <option name="sdkName" value="Python 3.11 (devops exercises)" />
+  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (devops exercises)" project-jdk-type="Python SDK" />
+=======
     <option name="sdkName" value="Python 3.10 (DevOps_Dackel_Devs)" />
   </component>
   <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (DevOps_Dackel_Devs)" project-jdk-type="Python SDK" />
+>>>>>>> 388a41fbbb53d27ff0492e0eff3dfd5a40a8a964
 </project>
