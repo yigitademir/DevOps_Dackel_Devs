@@ -59,7 +59,99 @@ class Battleship(Game):
 
     def __init__(self):
         """ Game initialization (set_state call not necessary) """
-        pass
+        self.board_size = 10  # Board is 10x10
+        self.ships_to_place = [
+            Ship("carrier", 5, None),
+            Ship("battleship", 4, None),
+            Ship("cruiser", 3, None),
+            Ship("submarine", 3, None),
+            Ship("destroyer", 2, None)
+        ]
+        self.state = BattleshipGameState(
+            idx_player_active=0,
+            phase=GamePhase.SETUP,
+            winner=None,
+            players=[
+                PlayerState("Player 1", [], [], []),
+                PlayerState("Player 2", [], [], [])
+            ]
+        )
+    
+    def is_within_bounds(self, coordinates: List[str]) -> bool:
+        """Check if all coordinates are within the board boundaries."""
+        for coord in coordinates:
+            row, col = self._convert_coordinate(coord)
+            if row < 0 or row >= self.board_size or col < 0 or col >= self.board_size:
+                return False
+        return True
+
+    def is_overlap(self, coordinates: List[str], player: PlayerState) -> bool:
+        """Check if the given coordinates overlap with any existing ships."""
+        for ship in player.ships:
+            if ship.location:
+                if set(coordinates) & set(ship.location):  # Check for intersection
+                    return True
+        return False
+    
+    def _convert_coordinate(self, coord: str) -> tuple:
+        """Convert string coordinates like 'A1' into (row, col)."""
+        row = ord(coord[0].upper()) - ord('A')  # Convert 'A' -> 0, 'B' -> 1, etc.
+        col = int(coord[1:]) - 1  # Convert '1' -> 0, '2' -> 1, etc.
+        return row, col
+
+    def place_ships(self, player_idx: int) -> None:
+        """Handle ship placement for a player."""
+        player = self.state.players[player_idx]
+        print(f"{player.name}, it's time to place your ships.")
+
+        for ship in self.ships_to_place:
+            valid_placement = False
+
+            while not valid_placement:
+                print(f"\nPlace your {ship.name} (length {ship.length}).")
+                coordinates = input(f"Enter {ship.length} coordinates separated by space (e.g., A1 A2): ").strip().upper().split()
+
+                # Validate the placement
+                if len(coordinates) != ship.length:
+                    print("Invalid input: Number of coordinates must match the ship's length.")
+                    continue
+
+                if not self.is_within_bounds(coordinates):
+                    print("Invalid placement: One or more coordinates are out of bounds.")
+                    continue
+
+                if self.is_overlap(coordinates, player):
+                    print("Invalid placement: Ship overlaps with another ship.")
+                    continue
+
+                # Validate that the coordinates are consecutive
+                if not self._is_consecutive(coordinates):
+                    print("Invalid placement: Coordinates must be consecutive in a straight line.")
+                    continue
+
+                # If all validations pass
+                ship.location = coordinates
+                player.ships.append(ship)
+                valid_placement = True
+                print(f"{ship.name} placed successfully at {', '.join(coordinates)}.")
+
+    def _is_consecutive(self, coordinates: List[str]) -> bool:
+        """Check if the coordinates are consecutive in a straight line."""
+        rows, cols = [], []
+        for coord in coordinates:
+            row, col = self._convert_coordinate(coord)
+            rows.append(row)
+            cols.append(col)
+
+        # Check for horizontal alignment (rows same, columns consecutive)
+        if len(set(rows)) == 1 and sorted(cols) == list(range(min(cols), max(cols) + 1)):
+            return True
+
+        # Check for vertical alignment (columns same, rows consecutive)
+        if len(set(cols)) == 1 and sorted(rows) == list(range(min(rows), max(rows) + 1)):
+            return True
+
+        return False
 
     def print_state(self) -> None:
         """ Set the game to a given state """
@@ -98,3 +190,9 @@ class RandomPlayer(Player):
 if __name__ == "__main__":
 
     game = Battleship()
+
+    # Ship placement for Player 1 and Player 2
+    for player_idx in range(len(game.state.players)):
+        game.place_ships(player_idx)
+
+    print("\nAll ships have been placed, ready to start the game.")
