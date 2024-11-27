@@ -2,7 +2,7 @@ from mimetypes import guess_type
 from typing import List, Optional
 import random
 from enum import Enum
-from server.py.game import Game, Player
+from game import Game, Player
 
 
 class GuessLetterAction:
