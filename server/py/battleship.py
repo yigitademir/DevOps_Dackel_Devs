@@ -53,6 +53,15 @@ class Battleship(Game):
 
     def __init__(self):
         """ Game initialization (set_state call not necessary) """
+        self.state = BattleshipGameState(
+        idx_player_active=0,
+        phase=GamePhase.SETUP,
+        winner=None,
+        players=[
+            PlayerState(name="Player 1", ships=[], shots=[], successful_shots=[]),
+            PlayerState(name="Player 2", ships=[], shots=[], successful_shots=[])
+            ]
+        )
         pass
 
     def print_state(self) -> None:
@@ -69,6 +78,8 @@ class Battleship(Game):
 
     def get_list_action(self) -> List[BattleshipAction]:
         """ Get a list of possible actions for the active player """
+
+
         pass
 
     def apply_action(self, action: BattleshipAction) -> None:
