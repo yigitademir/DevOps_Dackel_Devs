@@ -23,6 +23,12 @@ class Ship:
         self.name = name
         self.length = length
         self.location = location
+        self.hit_count = 0
+
+    @property
+    def is_sunk(self) -> bool:
+        """Determine if the ship is destroyed based on hit_count and length."""
+        return self.hit_count >= self.length
 
 
 class PlayerState:
