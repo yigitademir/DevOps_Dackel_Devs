@@ -77,6 +77,12 @@ class Battleship(Game):
             ]
         )
     
+    def _convert_coordinate(self, coord: str) -> tuple:
+        """Convert string coordinates like 'A1' into (row, col)."""
+        row = ord(coord[0].upper()) - ord('A')  # Convert 'A' -> 0, 'B' -> 1, etc.
+        col = int(coord[1:]) - 1  # Convert '1' -> 0, '2' -> 1, etc.
+        return row, col
+    
     def is_within_bounds(self, coordinates: List[str]) -> bool:
         """Check if all coordinates are within the board boundaries."""
         for coord in coordinates:
@@ -92,13 +98,25 @@ class Battleship(Game):
                 if set(coordinates) & set(ship.location):  # Check for intersection
                     return True
         return False
-    
-    def _convert_coordinate(self, coord: str) -> tuple:
-        """Convert string coordinates like 'A1' into (row, col)."""
-        row = ord(coord[0].upper()) - ord('A')  # Convert 'A' -> 0, 'B' -> 1, etc.
-        col = int(coord[1:]) - 1  # Convert '1' -> 0, '2' -> 1, etc.
-        return row, col
 
+    def _is_consecutive(self, coordinates: List[str]) -> bool:
+        """Check if the coordinates are consecutive in a straight line."""
+        rows, cols = [], []
+        for coord in coordinates:
+            row, col = self._convert_coordinate(coord)
+            rows.append(row)
+            cols.append(col)
+
+        # Check for horizontal alignment (rows same, columns consecutive)
+        if len(set(rows)) == 1 and sorted(cols) == list(range(min(cols), max(cols) + 1)):
+            return True
+
+        # Check for vertical alignment (columns same, rows consecutive)
+        if len(set(cols)) == 1 and sorted(rows) == list(range(min(rows), max(rows) + 1)):
+            return True
+
+        return False
+    
     def place_ships(self, player_idx: int) -> None:
         """Handle ship placement for a player."""
         player = self.state.players[player_idx]
@@ -135,24 +153,6 @@ class Battleship(Game):
                 self.ships_to_place.remove(ship)  # Remove the ship from the list of ships to place
                 valid_placement = True
                 print(f"{ship.name} placed successfully at {', '.join(coordinates)}.")
-
-    def _is_consecutive(self, coordinates: List[str]) -> bool:
-        """Check if the coordinates are consecutive in a straight line."""
-        rows, cols = [], []
-        for coord in coordinates:
-            row, col = self._convert_coordinate(coord)
-            rows.append(row)
-            cols.append(col)
-
-        # Check for horizontal alignment (rows same, columns consecutive)
-        if len(set(rows)) == 1 and sorted(cols) == list(range(min(cols), max(cols) + 1)):
-            return True
-
-        # Check for vertical alignment (columns same, rows consecutive)
-        if len(set(cols)) == 1 and sorted(rows) == list(range(min(rows), max(rows) + 1)):
-            return True
-
-        return False
 
     def print_state(self) -> None:
         """ Set the game to a given state """
