@@ -171,7 +171,10 @@ class Battleship(Game):
 
     def set_state(self, state: BattleshipGameState) -> None:
         """ Set the game to a given state """
-        pass
+        self.idx_player_active = state.idx_player_active
+        self.phase = state.phase
+        self.winner = state.winner
+        self.players = state.players
 
     def get_list_action(self) -> List[BattleshipAction]:
         """ Get a list of possible actions for the active player """
