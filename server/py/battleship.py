@@ -78,7 +78,8 @@ class Battleship(Game):
 
     def get_list_action(self) -> List[BattleshipAction]:
         """ Get a list of possible actions for the active player """
-
+        actions = []
+        active_player = self.state.players[self.state.idx_player_active]
 
         pass
 
