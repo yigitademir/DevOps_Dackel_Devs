@@ -26,7 +26,7 @@ class DogBenchmark(benchmark.Benchmark):
         self.game_server.reset()
         state = self.game_server.get_state()
 
-        assert state.phase == GamePhase.RUNNING, f'{state}Error: "bool_game_finished" must be False initially'
+        assert state.phase == GamePhase.RUNNING, f'{state}Error: "phase" must be gamePhase.RUNNING initially'
         assert state.cnt_round == 1, f'{state}Error: "cnt_round" must be 1 initially'
         assert len(state.list_card_discard) == 0, f'{state}Error: len("list_card_discard") must be 0 initially'
         assert len(state.list_card_draw) == 86, f'{state}Error: len("list_card_draw") must be 86 initially'
