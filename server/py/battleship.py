@@ -81,6 +81,21 @@ class Battleship(Game):
         actions = []
         active_player = self.state.players[self.state.idx_player_active]
 
+        if self.state.phase == GamePhase.RUNNING:    # After both players have set their ships
+            # Find shooting positions that are not shot yet
+            opponent = self.state.players[1 - self.state.idx_player_active]   #self.state.idx_player_active is either 1 or 0. Opponent is opposite. Opponent = the state of the Opponents board
+            all_positions = self.generate_all_positions()  #substitute by the function used to generate the board grid. --> all possible Possiitons A1 - J10
+            available_shots = [pos for pos in all_positions if pos not in active_player.shots]  # all spaces that have not yet been shot 
+
+            for shot in available_shots:    # creats a list of possible actions: shoot to any of the not yet used positions
+                actions.append(BattleshipAction(
+                    action_type=ActionType.SHOOT,
+                    ship_name=None,  # SHOOT actions don't need a ship name
+                    location=[shot]
+                ))
+
+        return actions
+
         pass
 
     def apply_action(self, action: BattleshipAction) -> None:
