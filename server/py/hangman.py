@@ -1,7 +1,7 @@
-from pydantic import BaseModel
 from typing import List, Optional
 import random
 from enum import Enum
+from pydantic import BaseModel
 from server.py.game import Game, Player
 
 
@@ -62,12 +62,11 @@ class Hangman(Game):
         """ Get a list of possible actions for the active player """
         if self.phase != GamePhase.RUNNING:
             return [] # there are no actions if GamePhase is SETUP or FINISHED
-        
         all_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         unused_letters = [i for i in all_letters if i not in self.guesses]
         print(f"Unused letters: {unused_letters}")
         return [GuessLetterAction(letter=letter) for letter in unused_letters]
-                
+
     def apply_action(self, action: GuessLetterAction) -> None:
         """ Apply the given action to the game """
         if self.phase != GamePhase.RUNNING:
@@ -78,7 +77,6 @@ class Hangman(Game):
         # Ignore already guessed letters
         if guess in self.guesses:
             return
-        
         # Add the guessed letter to the list of guesses
         self.guesses.append(guess)
 
@@ -111,7 +109,7 @@ class Hangman(Game):
                                 )
 
 class RandomPlayer(Player):
-
+    # pylint: disable=too-few-public-methods
     def select_action(self, state: HangmanGameState, actions: List[GuessLetterAction]) -> Optional[GuessLetterAction]:
         """ Given masked game state and possible actions, select the next action """
         if len(actions) > 0:
@@ -147,10 +145,10 @@ if __name__ == "__main__":
     while game.phase == GamePhase.RUNNING:
         player_view = game.get_player_view(idx_player=0)
         print(f"Player's view: {player_view.word_to_guess}") # Showing the masked word
-        actions = game.get_list_action() # Get possible actions
-        action = player.select_action(game.get_state(), actions) # Player selects an action
-        if action:
-            print(f"Player guesses: {action.letter}")
-            game.apply_action(action)
+        player_actions = game.get_list_action() # Get possible actions
+        player_action = player.select_action(game.get_state(), player_actions) # Player selects an action
+        if player_action:
+            print(f"Player guesses: {player_action.letter}")
+            game.apply_action(player_action)
 
     game.print_state()
