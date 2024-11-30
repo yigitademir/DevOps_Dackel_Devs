@@ -59,6 +59,7 @@ class Battleship(Game):
 
     def __init__(self):
         """ Game initialization (set_state call not necessary) """
+        
         self.board_size = 10  # Board is 10x10
         self.ships_to_place = [
             Ship("carrier", 5, None),
@@ -154,20 +155,49 @@ class Battleship(Game):
                 valid_placement = True
                 print(f"{ship.name} placed successfully at {', '.join(coordinates)}.")
 
+
     def print_state(self) -> None:
-        """ Set the game to a given state """
-        pass
+        """ Print the game to a given state """
+        print(f"Player {self.current_player}'s view:")
+        if self.current_player == 1:
+            self._print_grid(self.player1_grid, show_ships=True)
+        else:
+            self._print_grid(self.player2_grid, show_ships=True)
+        print("\nOpponent's view:")
+        opponent_grid = self.player2_grid if self.current_player == 1 else self.player1_grid
+        self._print_grid(opponent_grid, show_ships=False)
 
     def get_state(self) -> BattleshipGameState:
         """ Get the complete, unmasked game state """
         pass
 
     def set_state(self, state: BattleshipGameState) -> None:
-        """ Print the current game state """
-        pass
+        """ Set the game to a given state """
+        self.idx_player_active = state.idx_player_active
+        self.phase = state.phase
+        self.winner = state.winner
+        self.players = state.players
 
     def get_list_action(self) -> List[BattleshipAction]:
         """ Get a list of possible actions for the active player """
+        actions = []
+        active_player = self.state.players[self.state.idx_player_active]
+
+        if self.state.phase == GamePhase.RUNNING:    # After both players have set their ships
+            # Find shooting positions that are not shot yet
+            opponent = self.state.players[1 - self.state.idx_player_active]   #self.state.idx_player_active is either 1 or 0. Opponent is opposite. Opponent = the state of the Opponents board
+            all_positions = self.generate_all_positions()  #substitute by the function used to generate the board grid. --> all possible Possiitons A1 - J10
+            available_shots = [pos for pos in all_positions if pos not in active_player.shots]  # all spaces that have not yet been shot 
+
+            for shot in available_shots:    # creats a list of possible actions: shoot to any of the not yet used positions
+                actions.append(BattleshipAction(
+                    action_type=ActionType.SHOOT,
+                    ship_name=None,  # SHOOT actions don't need a ship name
+                    location=[shot]
+                ))
+
+        return actions
+
         pass
 
     def apply_action(self, action: BattleshipAction) -> None:
@@ -176,7 +206,23 @@ class Battleship(Game):
 
     def get_player_view(self, idx_player: int) -> BattleshipGameState:
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
-        pass
+        masked_players = []
+        for i, player in enumerate(self.players):
+            masked_ships = [] if i != idx_player else player.ships
+            masked_players.append(
+                PlayerState(
+                    name=player.name,
+                    ships=masked_ships,
+                    shots=player.shots,
+                    successful_shots=player.successful_shots,
+                )
+            )
+        return BattleshipGameState(
+            idx_player_active=self.idx_player_active,
+            phase=self.phase,
+            winner=self.winner,
+            players=masked_players,
+        )
 
 
 class RandomPlayer(Player):
@@ -185,6 +231,45 @@ class RandomPlayer(Player):
         """ Given masked game state and possible actions, select the next action """
         if len(actions) > 0:
             return random.choice(actions)
+        return None
+
+    def place_ships_randomly(self, state: BattleshipGameState, ships: List[Ship]) -> List[BattleshipAction]:
+        """ Generate random valid ship placement actions """
+        actions = []
+        for ship in ships:
+            while True:
+                # Generate random starting coordinates and direction
+                x, y = random.randint(0, 9), random.randint(0, 9)  # Assuming a 10x10 grid
+                direction = random.choice(['horizontal', 'vertical'])
+
+                # Calculate ship locations
+                if direction == 'horizontal':
+                    location = [f"{x},{y + i}" for i in range(ship.length) if y + i < 10]
+                else:
+                    location = [f"{x + i},{y}" for i in range(ship.length) if x + i < 10]
+
+                # Ensure ship fits on the grid and doesn't overlap
+                if len(location) == ship.length and all(
+                        self.is_valid_location(loc, state.players[self.idx].ships) for loc in location):
+                    actions.append(BattleshipAction(ActionType.SET_SHIP, ship.name, location))
+                    break
+        return actions
+
+    def is_valid_location(self, loc: str, ships: List[Ship]) -> bool:
+        """ Check if a location is valid (doesn't overlap with existing ships) """
+        for ship in ships:
+            if loc in ship.location:
+                return False
+        return True
+
+    def shoot_randomly(self, state: BattleshipGameState) -> Optional[BattleshipAction]:
+        """ Generate a random shooting coordinate that hasn't been guessed """
+        opponent = state.players[1 - state.idx_player_active]
+        possible_shots = [f"{x},{y}" for x in range(10) for y in range(10)
+                          if f"{x},{y}" not in opponent.shots]
+        if possible_shots:
+            shot = random.choice(possible_shots)
+            return BattleshipAction(ActionType.SHOOT, None, [shot])
         return None
 
 
