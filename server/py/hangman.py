@@ -27,8 +27,8 @@ class Hangman(Game):
         """ Important: Game initialization also requires a set_state call to set the 'word_to_guess' """
         self.word_to_guess = ""
         self.phase = GamePhase.SETUP
-        self.guesses = []
-        self.incorrect_guesses = []
+        self.guesses: List[str] = []
+        self.incorrect_guesses: List[str] = []
 
 
     def get_state(self) -> HangmanGameState:
@@ -74,11 +74,10 @@ class Hangman(Game):
 
         guess = action.letter.strip().upper()
 
-        # Ignore already guessed letters
         if guess in self.guesses:
-            return
-        # Add the guessed letter to the list of guesses
-        self.guesses.append(guess)
+            return # Ignore already guessed letters
+
+        self.guesses.append(guess) # Add the guessed letter to the list of guesses
 
         # Apply the guess action
         if guess in self.word_to_guess.upper():
