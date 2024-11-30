@@ -19,6 +19,7 @@ class HangmanGameState(BaseModel):
     word_to_guess: str
     phase: GamePhase
     guesses: List[str]
+    incorrect_guesses: List[str]
 
 class Hangman(Game):
 
@@ -36,6 +37,7 @@ class Hangman(Game):
             word_to_guess=self.word_to_guess,
             phase=self.phase,
             guesses=self.guesses,
+            incorrect_guesses=self.incorrect_guesses
         )
 
     def set_state(self, state: HangmanGameState) -> None:
@@ -43,6 +45,7 @@ class Hangman(Game):
         self.word_to_guess = state.word_to_guess
         self.phase = state.phase
         self.guesses = state.guesses
+        self.incorrect_guesses = state.incorrect_guesses
 
     def print_state(self) -> None:
         """ this method should output the masked word, showing correctly guessed letters and hiding others. """
@@ -80,7 +83,7 @@ class Hangman(Game):
         self.guesses.append(guess)
 
         # Apply the guess action
-        if guess in self.word_to_guess:
+        if guess in self.word_to_guess.upper():
             print(f"Good guess! {guess} is in the word.")
         else:
             print(f"Hmmm, {guess} is not in the word.")
@@ -90,7 +93,7 @@ class Hangman(Game):
         if len(self.incorrect_guesses) >= 8:
             self.phase = GamePhase.FINISHED
             print("Game over, better luck next time.")
-        elif all(letter in self.guesses for letter in self.word_to_guess):
+        elif all(letter.upper() in self.guesses for letter in self.word_to_guess):
             self.phase = GamePhase.FINISHED
             print("Congratulations, you guessed the word!")
 
@@ -103,7 +106,8 @@ class Hangman(Game):
         # Return the masked state for the player
         return HangmanGameState(word_to_guess = masked_word,
                                 phase = self.phase,
-                                guesses =self.guesses
+                                guesses =self.guesses,
+                                incorrect_guesses=self.incorrect_guesses
                                 )
 
 class RandomPlayer(Player):
@@ -131,7 +135,8 @@ if __name__ == "__main__":
     game_state = HangmanGameState(
         word_to_guess=word_to_guess,
         phase=GamePhase.RUNNING,
-        guesses=[]
+        guesses=[],
+        incorrect_guesses=[]
     )
     game.set_state(game_state)
 

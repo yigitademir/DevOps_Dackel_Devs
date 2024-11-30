@@ -65,7 +65,7 @@ class HangmanBenchmark(Benchmark):
         self.game_server.reset()
 
         # 8 wrong guesses
-        test_state1 = HangmanGameState(word_to_guess="XY", guesses=[*'ABCDEFG'], incorrect_guesses=[], phase=GamePhase.RUNNING)
+        test_state1 = HangmanGameState(word_to_guess="XY", guesses=[*'ABCDEFG'], incorrect_guesses=[*'ABCDEFG'], phase=GamePhase.RUNNING) #Gwen: incorrect_guesses was empty, so H guess was not considered as last incorrect guess allowed.
         self.game_server.set_state(test_state1)
         self.game_server.apply_action(GuessLetterAction(letter='H'))
         hint = "Gamephase should be 'FINISHED' after 8 wrong guesses"
