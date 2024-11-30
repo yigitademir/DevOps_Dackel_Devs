@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 import random
 from enum import Enum
-from game import Game, Player
+from server.py.game import Game, Player
 
 
 class GuessLetterAction(BaseModel):
@@ -51,6 +51,7 @@ class Hangman(Game):
             for letter in self.word_to_guess
         )
         print(f"Word: {masked_word}")
+        print(f"Guesses: {', '.join(self.guesses)}")
         print(f"Incorrect guesses: {', '.join(self.incorrect_guesses)}")
         print(f"Remaining lives: {8 - len(self.incorrect_guesses)}")
 
@@ -59,8 +60,8 @@ class Hangman(Game):
         if self.phase != GamePhase.RUNNING:
             return [] # there are no actions if GamePhase is SETUP or FINISHED
         
-        all_letters = "abcdefghijklmnopqrstuvwxyz"
-        unused_letters = [i for i in all_letters if i not in self.guesses + self.incorrect_guesses]
+        all_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        unused_letters = [i for i in all_letters if i not in self.guesses]
         print(f"Unused letters: {unused_letters}")
         return [GuessLetterAction(letter=letter) for letter in unused_letters]
                 
@@ -69,22 +70,24 @@ class Hangman(Game):
         if self.phase != GamePhase.RUNNING:
             return
 
-        guess = action.letter.lower()
+        guess = action.letter.strip().upper()
 
         # Ignore already guessed letters
-        if guess in self.guesses or guess in self.incorrect_guesses:
+        if guess in self.guesses:
             return
+        
+        # Add the guessed letter to the list of guesses
+        self.guesses.append(guess)
 
         # Apply the guess action
         if guess in self.word_to_guess:
             print(f"Good guess! {guess} is in the word.")
-            self.guesses.append(guess)
         else:
             print(f"Hmmm, {guess} is not in the word.")
             self.incorrect_guesses.append(guess)
 
         # Check if the game is over
-        if len(game.incorrect_guesses) >= 8:
+        if len(self.incorrect_guesses) >= 8:
             self.phase = GamePhase.FINISHED
             print("Game over, better luck next time.")
         elif all(letter in self.guesses for letter in self.word_to_guess):
@@ -119,7 +122,7 @@ if __name__ == "__main__":
 
     # Input the word to guess (setup phase)
     while True:
-        word_to_guess = input("Enter a word to guess (letters only): ").lower()
+        word_to_guess = input("Enter a word to guess (letters only): ").strip().upper()
         if word_to_guess.isalpha():
             break
         print("Invalid input. Please enter a valid word.")
