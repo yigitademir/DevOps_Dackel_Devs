@@ -1,8 +1,8 @@
-from pydantic import BaseModel
 from typing import List, Optional
 import random
 from enum import Enum
-from game import Game, Player
+from pydantic import BaseModel
+from server.py.game import Game, Player
 
 
 class GuessLetterAction(BaseModel):
@@ -19,6 +19,7 @@ class HangmanGameState(BaseModel):
     word_to_guess: str
     phase: GamePhase
     guesses: List[str]
+    incorrect_guesses: List[str]
 
 class Hangman(Game):
 
@@ -26,8 +27,8 @@ class Hangman(Game):
         """ Important: Game initialization also requires a set_state call to set the 'word_to_guess' """
         self.word_to_guess = ""
         self.phase = GamePhase.SETUP
-        self.guesses = []
-        self.incorrect_guesses = []
+        self.guesses: List[str] = []
+        self.incorrect_guesses: List[str] = []
 
 
     def get_state(self) -> HangmanGameState:
@@ -36,6 +37,7 @@ class Hangman(Game):
             word_to_guess=self.word_to_guess,
             phase=self.phase,
             guesses=self.guesses,
+            incorrect_guesses=self.incorrect_guesses
         )
 
     def set_state(self, state: HangmanGameState) -> None:
@@ -43,6 +45,7 @@ class Hangman(Game):
         self.word_to_guess = state.word_to_guess
         self.phase = state.phase
         self.guesses = state.guesses
+        self.incorrect_guesses = state.incorrect_guesses
 
     def print_state(self) -> None:
         """ this method should output the masked word, showing correctly guessed letters and hiding others. """
@@ -51,6 +54,7 @@ class Hangman(Game):
             for letter in self.word_to_guess
         )
         print(f"Word: {masked_word}")
+        print(f"Guesses: {', '.join(self.guesses)}")
         print(f"Incorrect guesses: {', '.join(self.incorrect_guesses)}")
         print(f"Remaining lives: {8 - len(self.incorrect_guesses)}")
 
@@ -58,36 +62,35 @@ class Hangman(Game):
         """ Get a list of possible actions for the active player """
         if self.phase != GamePhase.RUNNING:
             return [] # there are no actions if GamePhase is SETUP or FINISHED
-        
-        all_letters = "abcdefghijklmnopqrstuvwxyz"
-        unused_letters = [i for i in all_letters if i not in self.guesses + self.incorrect_guesses]
+        all_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        unused_letters = [i for i in all_letters if i not in self.guesses]
         print(f"Unused letters: {unused_letters}")
         return [GuessLetterAction(letter=letter) for letter in unused_letters]
-                
+
     def apply_action(self, action: GuessLetterAction) -> None:
         """ Apply the given action to the game """
         if self.phase != GamePhase.RUNNING:
             return
 
-        guess = action.letter.lower()
+        guess = action.letter.strip().upper()
 
-        # Ignore already guessed letters
-        if guess in self.guesses or guess in self.incorrect_guesses:
-            return
+        if guess in self.guesses:
+            return # Ignore already guessed letters
+
+        self.guesses.append(guess) # Add the guessed letter to the list of guesses
 
         # Apply the guess action
-        if guess in self.word_to_guess:
+        if guess in self.word_to_guess.upper():
             print(f"Good guess! {guess} is in the word.")
-            self.guesses.append(guess)
         else:
             print(f"Hmmm, {guess} is not in the word.")
             self.incorrect_guesses.append(guess)
 
         # Check if the game is over
-        if len(game.incorrect_guesses) >= 8:
+        if len(self.incorrect_guesses) >= 8:
             self.phase = GamePhase.FINISHED
             print("Game over, better luck next time.")
-        elif all(letter in self.guesses for letter in self.word_to_guess):
+        elif all(letter.upper() in self.guesses for letter in self.word_to_guess):
             self.phase = GamePhase.FINISHED
             print("Congratulations, you guessed the word!")
 
@@ -100,11 +103,12 @@ class Hangman(Game):
         # Return the masked state for the player
         return HangmanGameState(word_to_guess = masked_word,
                                 phase = self.phase,
-                                guesses =self.guesses
+                                guesses =self.guesses,
+                                incorrect_guesses=self.incorrect_guesses
                                 )
 
 class RandomPlayer(Player):
-
+    # pylint: disable=too-few-public-methods
     def select_action(self, state: HangmanGameState, actions: List[GuessLetterAction]) -> Optional[GuessLetterAction]:
         """ Given masked game state and possible actions, select the next action """
         if len(actions) > 0:
@@ -119,7 +123,7 @@ if __name__ == "__main__":
 
     # Input the word to guess (setup phase)
     while True:
-        word_to_guess = input("Enter a word to guess (letters only): ").lower()
+        word_to_guess = input("Enter a word to guess (letters only): ").strip().upper()
         if word_to_guess.isalpha():
             break
         print("Invalid input. Please enter a valid word.")
@@ -128,7 +132,8 @@ if __name__ == "__main__":
     game_state = HangmanGameState(
         word_to_guess=word_to_guess,
         phase=GamePhase.RUNNING,
-        guesses=[]
+        guesses=[],
+        incorrect_guesses=[]
     )
     game.set_state(game_state)
 
@@ -139,10 +144,10 @@ if __name__ == "__main__":
     while game.phase == GamePhase.RUNNING:
         player_view = game.get_player_view(idx_player=0)
         print(f"Player's view: {player_view.word_to_guess}") # Showing the masked word
-        actions = game.get_list_action() # Get possible actions
-        action = player.select_action(game.get_state(), actions) # Player selects an action
-        if action:
-            print(f"Player guesses: {action.letter}")
-            game.apply_action(action)
+        player_actions = game.get_list_action() # Get possible actions
+        player_action = player.select_action(game.get_state(), player_actions) # Player selects an action
+        if player_action:
+            print(f"Player guesses: {player_action.letter}")
+            game.apply_action(player_action)
 
     game.print_state()
