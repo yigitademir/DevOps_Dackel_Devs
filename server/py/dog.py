@@ -88,7 +88,7 @@ class GameState(BaseModel):
 
 class Dog(Game):
     BOARD = {
-        "common_track": list(range(96)),  # Positions 0–95
+        "common_track": list(range(64)),  # Positions 0–63
         "kennels": {
             0: [64, 65, 66, 67], # blue
             1: [72, 73, 74, 75], # green
