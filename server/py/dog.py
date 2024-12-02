@@ -156,6 +156,10 @@ class Dog(Game):
         self.state.idx_player_started = random.randint(0, 3)
         self.state.idx_player_active = self.state.idx_player_started
 
+    def shuffle_deck(self):
+        """Shuffle the card deck."""
+        random.shuffle(self.state.LIST_CARD)
+
     def set_state(self, state: GameState) -> None:
         """ Set the game to a given state """
         pass
