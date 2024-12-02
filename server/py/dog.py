@@ -87,6 +87,21 @@ class GameState(BaseModel):
 
 
 class Dog(Game):
+    BOARD = {
+        "common_track": list(range(96)),  # Positions 0–95
+        "kennels": {
+            0: [64, 65, 66, 67], # blue
+            1: [72, 73, 74, 75], # green
+            2: [80, 81, 82, 83], # red
+            3: [88, 89, 90, 91], # yellow
+        },
+        "finishes": {
+            0: [68, 69, 70, 71], # blue
+            1: [76, 77, 78, 79], # green
+            2: [84, 85, 86, 87], # red
+            3: [92, 93, 94, 95], # yellow
+        },
+    }
 
     def __init__(self) -> None:
         """ Game initialization (set_state call not necessary, we expect 4 players) """
