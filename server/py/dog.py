@@ -168,8 +168,17 @@ class Dog(Game):
         return self.state
 
     def print_state(self) -> None:
-        """ Print the current game state """
-        pass
+        print(f"cnt_player: int = {self.state.cnt_player}")
+        print(f"phase: {self.state.phase}")  # current phase of the game
+        print(f"cnt_round: {self.state.cnt_round}")
+        print(f"bool_game_finished: {self.state.bool_game_finished}")
+        print(f"bool_card_exchanged: {self.state.bool_card_exchanged}")
+        print(f"idx_player_started: {self.state.idx_player_started}")
+        print(f"idx_player_active: {self.state.idx_player_active}")
+        print(f"list_player: {self.state.list_player}")
+        print(f"list_id_card_draw: {len(self.state.list_id_card_draw)}")
+        print(f"list_id_card_discard: {len(self.state.list_id_card_discard)}")
+        print(f"card_active: {self.state.card_active if self.state.card_active else None}")
 
     def get_list_action(self) -> List[Action]:
         """ Get a list of possible actions for the active player """
@@ -177,7 +186,7 @@ class Dog(Game):
 
     def apply_action(self, action: Action) -> None:
         """ Apply the given action to the game """
-        pass
+    pass
 
     def get_player_view(self, idx_player: int) -> GameState:
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
