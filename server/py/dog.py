@@ -118,12 +118,43 @@ class Dog(Game):
     "K": {"start": True, "moves": [13]},
     "A": {"start": True, "moves": [1, 11]},  # Start or move 1 or 11 spots forward
     "JKR": {"wildcard": True},  # Special rule: Can mimic any card
-}
+    }
 
     def __init__(self) -> None:
-        self.state = GameState()
-        self.state.phase = GamePhase.SETUP
-        print(f"Game initialized. Phase: {self.state.phase}")
+        self.state = GameState(
+            phase = GamePhase.RUNNING, # Transition directly to RUNNING phase
+            cnt_round = 1,             # First round
+            bool_game_finished = False,
+            bool_card_exchanged = False,
+            idx_player_started = 0,    # Default starting player index (can randomize)
+            idx_player_active = 0,     # Same as idx_player_started initially
+            list_card_draw = [],       # Will populate below
+            list_card_discard = [],    # Discard pile is initially empty
+            card_active = None,        # No active card at the start
+            list_player = [],          # Will populate players below
+        )
+        # Create the players
+        kennel_positions = Dog.BOARD["kennels"][i]
+        player = PlayerState(
+            name=f"Player {i + 1}",
+            list_card=[],  # Will deal cards next
+            list_marble=[Marble(pos=pos, is_safe=False) for pos in kennel_positions],
+        )
+        self.state.list_player.append(player)
+
+        # Shuffle the deck and prepare draw pile
+        self.shuffle_deck()
+        self.state.list_card_draw = self.state.LIST_CARD.copy()  # Full shuffled deck
+
+        # Deal 6 cards to each player
+        for player in self.state.list_player:
+            player.list_card = [
+                self.state.list_card_draw.pop() for _ in range(6)
+            ]
+
+        # Randomize the starting player if needed
+        self.state.idx_player_started = random.randint(0, 3)
+        self.state.idx_player_active = self.state.idx_player_started
 
     def set_state(self, state: GameState) -> None:
         """ Set the game to a given state """
@@ -161,4 +192,5 @@ class RandomPlayer(Player):
 
 if __name__ == '__main__':
 
-    game = Dog()
+    game = Dog() # Initialize the game
+    game_state = GameState(phase = GamePhase.RUNNING)
