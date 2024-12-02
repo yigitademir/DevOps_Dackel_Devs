@@ -103,6 +103,23 @@ class Dog(Game):
         },
     }
 
+    RANK_ACTIONS = {
+    "2": {"start": False, "moves": [2]},
+    "3": {"start": False, "moves": [3]},
+    "4": {"start": False, "moves": [4, -4]},
+    "5": {"start": False, "moves": [5]},
+    "6": {"start": False, "moves": [6]},
+    "7": {"start": False, "split": True, "moves": [7]},  # Special rule: Split
+    "8": {"start": False, "moves": [8]},
+    "9": {"start": False, "moves": [9]},
+    "10": {"start": False, "moves": [10]},
+    "J": {"start": False, "exchange": True},  # Special rule: Exchange
+    "Q": {"start": False, "moves": [12]},
+    "K": {"start": True, "moves": [13]},
+    "A": {"start": True, "moves": [1, 11]},  # Start or move 1 or 11 spots forward
+    "JKR": {"wildcard": True},  # Special rule: Can mimic any card
+}
+
     def __init__(self) -> None:
         self.state = GameState()
         self.state.phase = GamePhase.SETUP
