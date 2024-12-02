@@ -205,4 +205,3 @@ class RandomPlayer(Player):
 if __name__ == '__main__':
 
     game = Dog() # Initialize the game
-    game_state = GameState(phase = GamePhase.RUNNING)
