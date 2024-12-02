@@ -104,8 +104,9 @@ class Dog(Game):
     }
 
     def __init__(self) -> None:
-        """ Game initialization (set_state call not necessary, we expect 4 players) """
-        pass
+        self.state = GameState()
+        self.state.phase = GamePhase.SETUP
+        print(f"Game initialized. Phase: {self.state.phase}")
 
     def set_state(self, state: GameState) -> None:
         """ Set the game to a given state """
