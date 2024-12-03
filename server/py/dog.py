@@ -128,8 +128,8 @@ class Dog(Game):
             bool_card_exchanged = False,
             idx_player_started = 0,    # Default starting player index - will assign random value below
             idx_player_active = 0,     # Same as idx_player_started initially
-            list_card_draw = [],       # Will populate below
-            list_card_discard = [],    # Discard pile is initially empty
+            list_id_card_draw = [],       # Will populate below
+            list_id_card_discard = [],    # Discard pile is initially empty
             card_active = None,        # No active card at the start
             list_player = [],          # Will populate players below
         )
