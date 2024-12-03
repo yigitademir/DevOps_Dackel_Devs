@@ -161,6 +161,16 @@ class Dog(Game):
         random.shuffle(self.state.LIST_CARD)
         self.state.list_id_card_draw = self.state.LIST_CARD.copy() # Set draw pile
 
+    def reshuffle_cards(self) -> None:
+        """Reshuffle cards from the discard pile to the draw pile if needed. Test 50"""
+        if self.state.list_card_discard:
+            # Transfer all cards from discard to draw pile
+            self.state.list_card_draw.extend(self.state.list_card_discard)
+            # Clear the discard pile
+            self.state.list_card_discard.clear()
+            # Shuffle the draw pile
+            random.shuffle(self.state.list_card_draw)
+
     def set_state(self, state: GameState) -> None:
         self.state = state
 
@@ -186,7 +196,12 @@ class Dog(Game):
 
     def apply_action(self, action: Action) -> None:
         """ Apply the given action to the game """
-    pass
+        # Check if reshuffle is required before processing any actions. Test 50
+        if not self.state.list_card_draw:
+            self.reshuffle_cards()
+
+        # Continue with other action-processing logic here
+        pass
 
     def get_player_view(self, idx_player: int) -> GameState:
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
