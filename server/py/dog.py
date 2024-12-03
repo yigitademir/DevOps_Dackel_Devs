@@ -193,26 +193,33 @@ class Dog(Game):
         print(f"card_active: {self.state.card_active if self.state.card_active else None}")
 
     def get_list_action(self) -> List[Action]:
-        """ Get a list of possible actions for the active player. Test 3 """
+        """ Get a list of possible actions for the active player.
+            Return lists of actions available depending on how many
+            start cards the player has and whether marbles ar in kennel
+            or not.Tests 3, 4 and 5"""
         actions = []
+        player = self.state.list_player[self.state.idx_player_active]
 
-        # Get active player and their state
-        idx_player_active = self.state.idx_player_active
-        player = self.state.list_player[idx_player_active]
+        # Case 1: All marbles are in the kennel, no start cards
+        if all(marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active] for marble in player.list_marble):
+            # Filter for start cards (e.g., Ace, King, Joker)
+            start_cards = [card for card in player.list_card if card.rank in ["A", "K", "JKR"]]
 
-        # Check if all marbles are in the kennel
-        kennel_positions = Dog.BOARD["kennels"][idx_player_active]
-        all_in_kennel = all(marble.pos in kennel_positions for marble in player.list_marble)
+            # No start cards available, return empty actions list
+            if not start_cards:
+                return actions
 
-        # Check if player has a start card
-        has_start_card = any(self.RANK_ACTIONS[card.rank].get("start", False) for card in player.list_card)
+            # Case 2 & 3: At least one start card
+            # Add actions for each start card to move a marble out of the kennel
+            for card in start_cards:
+                # Determine the starting position for the active player
+                pos_from = Dog.BOARD["kennels"][self.state.idx_player_active][0]  # First kennel position
+                pos_to = Dog.BOARD["common_track"][0]  # Start of the track
 
-        # If all marbles are in the kennel and no start card, return an empty list
-        if all_in_kennel and not has_start_card:
-            return actions
+                # Add the action for this start card
+                actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
-        # Otherwise, determine valid actions (to be implemented based on game rules)
-        # Add other action logic here
+        # Further logic for additional game phases or card actions can go here...
 
         return actions
 
