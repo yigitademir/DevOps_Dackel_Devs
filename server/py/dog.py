@@ -135,12 +135,14 @@ class Dog(Game):
         )
         # Create the players
         for i in range(4):  # 4 players
+            team_id = i % 2 # Players 0 and 2 are team 0, 1 and 3 are team 1
             kennel_positions = Dog.BOARD["kennels"][i]
             player = PlayerState(
                 name=f"Player {i + 1}",
                 list_card=[],  # Will deal cards next
                 list_marble=[Marble(pos=pos, is_safe=False) for pos in kennel_positions] # 4 marbles for each player
             )
+            player.team_id = team_id # Assigning team ID
             self.state.list_player.append(player)
 
         # Shuffle the deck to prepare for initial draw
@@ -192,6 +194,21 @@ class Dog(Game):
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
         pass
 
+    def check_game_end(self):
+        """Check if the game-ending condition is met."""
+        # Group players by team
+        team_finish_status = {0: True, 1: True}  # Assume both teams are finished initially
+
+        for player in self.state.list_player:
+            finish_positions = Dog.BOARD["finishes"][self.state.list_player.index(player)]
+            team_id = player.team_id
+            # If any marble is not in a finish position, the team is not finished
+            if not all(marble.pos in finish_positions for marble in player.list_marble):
+                team_finish_status[team_id] = False
+
+        # If any team is fully finished, the game ends
+        if any(team_finish_status.values()):
+            self.state.bool_game_finished = True
 
 class RandomPlayer(Player):
 
