@@ -20,6 +20,7 @@ class PlayerState(BaseModel):
     name: str                  # name of player
     list_card: List[Card]      # list of cards
     list_marble: List[Marble]  # list of marbles
+    team_id: int               # team_id
 
 
 class Action(BaseModel):
@@ -140,9 +141,9 @@ class Dog(Game):
             player = PlayerState(
                 name=f"Player {i + 1}",
                 list_card=[],  # Will deal cards next
-                list_marble=[Marble(pos=pos, is_save=False) for pos in kennel_positions] # 4 marbles for each player
+                list_marble=[Marble(pos=pos, is_save=False) for pos in kennel_positions], # 4 marbles for each player
+                team_id=team_id
             )
-            player.team_id = team_id # Assigning team ID
             self.state.list_player.append(player)
 
         # Shuffle the deck to prepare for initial draw
