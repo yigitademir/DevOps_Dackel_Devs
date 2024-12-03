@@ -31,8 +31,8 @@ class DogBenchmark(benchmark.Benchmark):
 
         assert state.phase == GamePhase.RUNNING, f'{state}Error: "bool_game_finished" must be False initially'
         assert state.cnt_round == 1, f'{state}Error: "cnt_round" must be 1 initially'
-        assert len(state.list_card_discard) == 0, f'{state}Error: len("list_card_discard") must be 0 initially'
-        assert len(state.list_card_draw) == 86, f'{state}Error: len("list_card_draw") must be 86 initially'
+        assert len(state.list_id_card_discard) == 0, f'{state}Error: len("list_card_discard") must be 0 initially'
+        assert len(state.list_id_card_draw) == 86, f'{state}Error: len("list_card_draw") must be 86 initially'
         assert len(state.list_player) == 4, f'{state}Error: len("list_player") must be 4'
         assert state.idx_player_active >= 0, f'{state}Error: "idx_player_active" must >= 0'
         assert state.idx_player_active < 4, f'{state}Error: "idx_player_active" must < 4'
@@ -54,8 +54,8 @@ class DogBenchmark(benchmark.Benchmark):
         state = self.game_server.get_state()
 
         assert state.cnt_round > 0, f'{state}Error: "cnt_round" must be > 0'
-        assert len(state.list_card_draw) < 86, f'{state}Error: len("list_card_draw") must be < 86'
-        assert len(state.list_player) == 4, f'{state}Error: len("list_player") must be 4'
+        assert len(state.list_id_card_draw) < 86, f'{state}Error: len("list_card_draw") must be < 86'
+        assert len(state.list_id_player) == 4, f'{state}Error: len("list_player") must be 4'
         assert state.idx_player_active >= 0, f'{state}Error: "idx_player_active" must >= 0'
         assert state.idx_player_active < 4, f'{state}Error: "idx_player_active" must < 4'
         assert state.idx_player_started != state.idx_player_active, f'{state}Error: "idx_player_active" must be != "idx_player_started"'
@@ -1918,7 +1918,7 @@ class DogBenchmark(benchmark.Benchmark):
     def get_list_action_as_str(self, list_action):
         return json.dumps([str(action) for action in list_action], indent=4, ensure_ascii=False)
 
-    def start_game_state_at_round_2(self):
+    def start_game_state_at_round_2(self) -> object:
         self.game_server.reset()
 
         state = self.game_server.get_state()

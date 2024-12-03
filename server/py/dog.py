@@ -152,7 +152,7 @@ class Dog(Game):
         # Deal 6 cards to each player
         for player in self.state.list_player:
             player.list_card = [
-                self.state.list_card_draw.pop() for _ in range(6)
+                self.state.list_id_card_draw.pop() for _ in range(6)
             ]
 
         # Randomize the starting player
