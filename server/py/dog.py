@@ -12,7 +12,7 @@ class Card(BaseModel):
 
 
 class Marble(BaseModel):
-    pos: str       # position on board (0 to 95)
+    pos: int       # position on board (0 to 95)
     is_save: bool  # true if marble was moved out of kennel and was not yet moved
 
 
@@ -140,7 +140,7 @@ class Dog(Game):
             player = PlayerState(
                 name=f"Player {i + 1}",
                 list_card=[],  # Will deal cards next
-                list_marble=[Marble(pos=pos, is_safe=False) for pos in kennel_positions] # 4 marbles for each player
+                list_marble=[Marble(pos=pos, is_save=False) for pos in kennel_positions] # 4 marbles for each player
             )
             player.team_id = team_id # Assigning team ID
             self.state.list_player.append(player)
