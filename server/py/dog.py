@@ -194,6 +194,32 @@ class Dog(Game):
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
         pass
 
+    def play_turn(self):
+        """Handle a single player's turn."""
+        current_player = self.state.list_player[self.state.idx_player_active]
+        print(f"It’s {current_player.name}'s turn.")
+
+        # Get valid actions for the current player
+        actions = self.get_list_action()
+        if not actions:
+            # No valid action; discard all cards
+            self.state.list_id_card_discard.extend(current_player.list_card)
+            current_player.list_card.clear()
+            print(f"{current_player.name} has no valid actions - cards discarded.")
+        else:
+            # Perform an action (AI logic or user input)
+            action = self.select_action(current_player, actions)
+            self.apply_action(action)
+
+        # Move to the next player
+        self.state.idx_player_active = (self.state.idx_player_active + 1) % self.state.cnt_player
+
+    def end_round(self):
+        """End the current round and prepare for the next."""
+        self.state.cnt_round += 1
+        self.state.idx_player_started = (self.state.idx_player_started + 1) % self.state.cnt_player
+        self.state.idx_player_active = self.state.idx_player_started
+
     def check_game_end(self):
         """Check if the game-ending condition is met."""
         # Group players by team
@@ -210,6 +236,13 @@ class Dog(Game):
         if any(team_finish_status.values()):
             self.state.bool_game_finished = True
 
+    def deal_cards_to_players(self):
+        """Deal new cards to players at the start of a new round."""
+        cards_to_deal = max(2, 7 - (self.state.cnt_round % 5))  # Calculate number of cards for distribution
+        for player in self.state.list_player:
+            while len(player.list_card) < cards_to_deal and self.state.list_id_card_draw:
+                player.list_card.append(self.state.list_id_card_draw.pop())
+
 class RandomPlayer(Player):
 
     def select_action(self, state: GameState, actions: List[Action]) -> Optional[Action]:
@@ -222,3 +255,18 @@ class RandomPlayer(Player):
 if __name__ == '__main__':
 
     game = Dog() # Initialize the game
+    print("Game started")
+
+    while not game.state.bool_game_finished == True: # Running the game until there is a winner
+        print(f"Starting Round {game.state.cnt_round}")
+
+        # Round loop: Players take turns until all cards are played
+        while any(len(player.list_card) > 0 for player in game.state.list_player):
+            game.play_turn()
+
+        # End the round
+        game.end_round()
+        game.deal_cards_to_players()
+        game.check_game_end()
+
+    print("Game Over!")
