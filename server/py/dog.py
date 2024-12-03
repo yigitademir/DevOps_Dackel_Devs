@@ -158,6 +158,7 @@ class Dog(Game):
         # Randomize the starting player
         self.state.idx_player_started = random.randint(0, 3)
         self.state.idx_player_active = self.state.idx_player_started
+        self.cnt_none = 0
 
     def shuffle_deck(self):
         """Shuffle the card deck."""
@@ -225,43 +226,65 @@ class Dog(Game):
         return actions
 
     def apply_action(self, action: Action) -> None:
-        """ Apply the given action to the game """
-        # Check if reshuffle is required before processing any actions. Test 50
-        if not self.state.list_card_draw:
-            self.reshuffle_cards()
+        """
+        Apply the given action or handle the current player's turn if action is None.
+        If no valid actions are available, the player's cards are discarded.
+        """
+        current_player = self.state.list_player[self.state.idx_player_active]
 
-        # Continue with other action-processing logic here
-        pass
+        if action is None:
+            # Determine available actions
+            actions = self.get_list_action()
+
+            if actions:
+                # Select and apply an action (AI or user input)
+                action = RandomPlayer.select_action(current_player, actions)
+                self.apply_action(action)
+                print(f"{current_player.name} played {action.card.rank}{action.card.suit}.")
+            else:
+                # No valid actions, discard all cards
+                self.state.list_id_card_discard.extend(current_player.list_card)
+                discarded_cards = current_player.list_card.copy()
+                current_player.list_card.clear()
+                print(f"{current_player.name} has no valid actions and discards all cards.")
+
+            # Move to the next player
+            self.state.idx_player_active = (self.state.idx_player_active + 1) % self.state.cnt_player
+
+            # Count how many times players have nothing to play
+            self.cnt_none += 1
+            if self.cnt_none % self.state.cnt_player == 0: # if cnt_none can be divided by 4 then we start new round
+                self.end_start_round()
+
+        else:
+            # Handle specific actions provided as input
+            pass
+
+        # Check if reshuffle is required before processing any actions. Test 50
+        if not self.state.list_id_card_draw:
+            self.reshuffle_cards()
 
     def get_player_view(self, idx_player: int) -> GameState:
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
         pass
 
-    def play_turn(self):
-        """Handle a single player's turn."""
-        current_player = self.state.list_player[self.state.idx_player_active]
-        print(f"It’s {current_player.name}'s turn.")
+    def play_game(self):
+        """Run the game automatically from start to finish."""
+        print("Game started!\nFirst round!")
 
-        # Get valid actions for the current player
-        actions = self.get_list_action()
-        if not actions:
-            # No valid action; discard all cards
-            self.state.list_id_card_discard.extend(current_player.list_card)
-            current_player.list_card.clear()
-            print(f"{current_player.name} has no valid actions - cards discarded.")
-        else:
-            # Perform an action (AI logic or user input)
-            action = self.select_action(current_player, actions)
-            self.apply_action(action)
+        while not self.state.bool_game_finished:
+            self.apply_action(None)   # Play a single round
+            self.check_game_end()   # Check if the game has ended
 
-        # Move to the next player
-        self.state.idx_player_active = (self.state.idx_player_active + 1) % self.state.cnt_player
+        print("Game Over!")
+        # self.display_winner()   # No need for this function now
 
-    def end_round(self):
+    def end_start_round(self):
         """End the current round and prepare for the next."""
         self.state.cnt_round += 1
-        self.state.idx_player_started = (self.state.idx_player_started + 1) % self.state.cnt_player
-        self.state.idx_player_active = self.state.idx_player_started
+        self.state.idx_player_active = (self.state.idx_player_started + self.state.cnt_round - 1) % self.state.cnt_player
+        # self.state.idx_player_active = self.state.idx_player_started
+        self.deal_cards_to_players()
 
     def check_game_end(self):
         """Check if the game-ending condition is met."""
@@ -281,10 +304,12 @@ class Dog(Game):
 
     def deal_cards_to_players(self):
         """Deal new cards to players at the start of a new round."""
-        cards_to_deal = max(2, 7 - (self.state.cnt_round % 5))  # Calculate number of cards for distribution
+        cards_to_deal = [5, 4, 3, 2, 6][(self.state.cnt_round - 2) % 5]  # Calculate number of cards for distribution
         for player in self.state.list_player:
             while len(player.list_card) < cards_to_deal and self.state.list_id_card_draw:
                 player.list_card.append(self.state.list_id_card_draw.pop())
+
+        print(f"Starting Round {self.state.cnt_round}")
 
 class RandomPlayer(Player):
 
@@ -298,18 +323,4 @@ class RandomPlayer(Player):
 if __name__ == '__main__':
 
     game = Dog() # Initialize the game
-    print("Game started")
-
-    while not game.state.bool_game_finished == True: # Running the game until there is a winner
-        print(f"Starting Round {game.state.cnt_round}")
-
-        # Round loop: Players take turns until all cards are played
-        while any(len(player.list_card) > 0 for player in game.state.list_player):
-            game.play_turn()
-
-        # End the round
-        game.end_round()
-        game.deal_cards_to_players()
-        game.check_game_end()
-
-    print("Game Over!")
+    game.play_game()

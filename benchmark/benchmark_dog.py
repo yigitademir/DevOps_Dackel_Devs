@@ -55,7 +55,7 @@ class DogBenchmark(benchmark.Benchmark):
 
         assert state.cnt_round > 0, f'{state}Error: "cnt_round" must be > 0'
         assert len(state.list_id_card_draw) < 86, f'{state}Error: len("list_card_draw") must be < 86'
-        assert len(state.list_id_player) == 4, f'{state}Error: len("list_player") must be 4'
+        assert len(state.list_player) == 4, f'{state}Error: len("list_player") must be 4'
         assert state.idx_player_active >= 0, f'{state}Error: "idx_player_active" must >= 0'
         assert state.idx_player_active < 4, f'{state}Error: "idx_player_active" must < 4'
         assert state.idx_player_started != state.idx_player_active, f'{state}Error: "idx_player_active" must be != "idx_player_started"'
