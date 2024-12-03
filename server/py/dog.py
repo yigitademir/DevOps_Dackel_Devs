@@ -193,8 +193,28 @@ class Dog(Game):
         print(f"card_active: {self.state.card_active if self.state.card_active else None}")
 
     def get_list_action(self) -> List[Action]:
-        """ Get a list of possible actions for the active player """
-        pass
+        """ Get a list of possible actions for the active player. Test 3 """
+        actions = []
+
+        # Get active player and their state
+        idx_player_active = self.state.idx_player_active
+        player = self.state.list_player[idx_player_active]
+
+        # Check if all marbles are in the kennel
+        kennel_positions = Dog.BOARD["kennels"][idx_player_active]
+        all_in_kennel = all(marble.pos in kennel_positions for marble in player.list_marble)
+
+        # Check if player has a start card
+        has_start_card = any(self.RANK_ACTIONS[card.rank].get("start", False) for card in player.list_card)
+
+        # If all marbles are in the kennel and no start card, return an empty list
+        if all_in_kennel and not has_start_card:
+            return actions
+
+        # Otherwise, determine valid actions (to be implemented based on game rules)
+        # Add other action logic here
+
+        return actions
 
     def apply_action(self, action: Action) -> None:
         """ Apply the given action to the game """
