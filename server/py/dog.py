@@ -101,6 +101,12 @@ class Dog(Game):
             2: [84, 85, 86, 87], # red
             3: [92, 93, 94, 95], # yellow
         },
+        "starts": {
+            0: 0, # blue starts at position 0
+            1: 16, # green starts at position 16
+            2: 32, # red starts at position 32
+            3: 48, # yellow starts at position 48
+        }
     }
 
     RANK_ACTIONS = {
