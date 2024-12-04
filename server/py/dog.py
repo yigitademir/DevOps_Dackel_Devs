@@ -261,7 +261,16 @@ class Dog(Game):
 
         else:
             # Handle specific actions provided as input
-            pass
+            if action.pos_from is not None and action.pos_to is not None:
+                # Find the marble
+                marble = next((m for m in current_player.list_marble if m.pos == action.pos_from), None)
+                if marble:
+                    # Update marble position
+                    marble.pos = action.pos_to
+                    # Moving from the kennel to the start position
+                    start_position = Dog.BOARD["starts"][self.state.idx_player_active]
+                    if action.pos_from in Dog.BOARD["kennels"][self.state.idx_player_active] and action.pos_to == start_position:
+                        marble.is_save = True
 
         # Check if reshuffle is required before processing any actions. Test 50
         if not self.state.list_card_draw:
