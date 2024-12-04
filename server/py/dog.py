@@ -124,12 +124,11 @@ class Dog(Game):
         self.state = GameState(
             phase = GamePhase.RUNNING, # Transition directly to RUNNING phase
             cnt_round = 1,             # First round
-            bool_game_finished = False,
             bool_card_exchanged = False,
             idx_player_started = 0,    # Default starting player index - will assign random value below
             idx_player_active = 0,     # Same as idx_player_started initially
-            list_id_card_draw = [],       # Will populate below
-            list_id_card_discard = [],    # Discard pile is initially empty
+            list_card_draw = [],       # Will populate below
+            list_card_discard = [],    # Discard pile is initially empty
             card_active = None,        # No active card at the start
             list_player = [],          # Will populate players below
         )
@@ -146,12 +145,12 @@ class Dog(Game):
             self.state.list_player.append(player)
 
         # Shuffle the deck to prepare for initial draw
-        self.state.list_id_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
+        self.state.list_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
 
         # Deal 6 cards to each player
         for player in self.state.list_player:
             player.list_card = [
-                self.state.list_id_card_draw.pop() for _ in range(6)
+                self.state.list_card_draw.pop() for _ in range(6)
             ]
 
         # Randomize the starting player
@@ -162,7 +161,7 @@ class Dog(Game):
     def shuffle_deck(self):
         """Shuffle the card deck."""
         random.shuffle(self.state.LIST_CARD)
-        self.state.list_id_card_draw = self.state.LIST_CARD.copy() # Set draw pile
+        self.state.list_card_draw = self.state.LIST_CARD.copy() # Set draw pile
 
     def reshuffle_cards(self) -> None:
         """Reshuffle cards from the discard pile to the draw pile if needed. Test 50"""
@@ -184,13 +183,12 @@ class Dog(Game):
         print(f"cnt_player: int = {self.state.cnt_player}")
         print(f"phase: {self.state.phase}")  # current phase of the game
         print(f"cnt_round: {self.state.cnt_round}")
-        print(f"bool_game_finished: {self.state.bool_game_finished}")
         print(f"bool_card_exchanged: {self.state.bool_card_exchanged}")
         print(f"idx_player_started: {self.state.idx_player_started}")
         print(f"idx_player_active: {self.state.idx_player_active}")
         print(f"list_player: {self.state.list_player}")
-        print(f"list_id_card_draw: {len(self.state.list_id_card_draw)}")
-        print(f"list_id_card_discard: {len(self.state.list_id_card_discard)}")
+        print(f"list_card_draw: {len(self.state.list_card_draw)}")
+        print(f"list_card_discard: {len(self.state.list_card_discard)}")
         print(f"card_active: {self.state.card_active if self.state.card_active else None}")
 
     def get_list_action(self) -> List[Action]:
@@ -242,7 +240,7 @@ class Dog(Game):
                 print(f"{current_player.name} played {action.card.rank}{action.card.suit}.")
             else:
                 # No valid actions, discard all cards
-                self.state.list_id_card_discard.extend(current_player.list_card)
+                self.state.list_card_discard.extend(current_player.list_card)
                 discarded_cards = current_player.list_card.copy()
                 current_player.list_card.clear()
                 print(f"{current_player.name} has no valid actions and discards all cards.")
@@ -260,7 +258,7 @@ class Dog(Game):
             pass
 
         # Check if reshuffle is required before processing any actions. Test 50
-        if not self.state.list_id_card_draw:
+        if not self.state.list_card_draw:
             self.reshuffle_cards()
 
     def get_player_view(self, idx_player: int) -> GameState:
@@ -271,7 +269,7 @@ class Dog(Game):
         """Run the game automatically from start to finish."""
         print("Game started!\nFirst round!")
 
-        while not self.state.bool_game_finished:
+        while not self.state == GamePhase.FINISHED:
             self.apply_action(None)   # Play a single round
             self.check_game_end()   # Check if the game has ended
 
@@ -299,14 +297,14 @@ class Dog(Game):
 
         # If any team is fully finished, the game ends
         if any(team_finish_status.values()):
-            self.state.bool_game_finished = True
+            self.state.phase = GamePhase.FINISHED
 
     def deal_cards_to_players(self):
         """Deal new cards to players at the start of a new round."""
         cards_to_deal = [5, 4, 3, 2, 6][(self.state.cnt_round - 2) % 5]  # Calculate number of cards for distribution
         for player in self.state.list_player:
-            while len(player.list_card) < cards_to_deal and self.state.list_id_card_draw:
-                player.list_card.append(self.state.list_id_card_draw.pop())
+            while len(player.list_card) < cards_to_deal and self.state.list_card_draw:
+                player.list_card.append(self.state.list_card_draw.pop())
 
         print(f"Starting Round {self.state.cnt_round}")
 
