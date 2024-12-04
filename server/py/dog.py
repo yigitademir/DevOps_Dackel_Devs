@@ -14,7 +14,7 @@ class Card(BaseModel):
 class Marble(BaseModel):
     pos: int       # position on board (0 to 95)
     is_save: bool  # true if marble was moved out of kennel and was not yet moved
-
+    passed_start: int = 0 # number of times the marble passes the start position
 
 class PlayerState(BaseModel):
     name: str                  # name of player
