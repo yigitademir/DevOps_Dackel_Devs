@@ -27,7 +27,7 @@ class Action(BaseModel):
     card: Card                 # card to play
     pos_from: Optional[int]    # position to move the marble from
     pos_to: Optional[int]      # position to move the marble to
-    card_swap: Optional[Card]  # optional card to swap ()
+    card_swap: Optional[Card] = None  # optional card to swap ()
 
 
 class GamePhase(str, Enum):
@@ -101,6 +101,12 @@ class Dog(Game):
             2: [84, 85, 86, 87], # red
             3: [92, 93, 94, 95], # yellow
         },
+        "starts": {
+            0: 0, # blue starts at position 0
+            1: 16, # green starts at position 16
+            2: 32, # red starts at position 32
+            3: 48, # yellow starts at position 48
+        }
     }
 
     RANK_ACTIONS = {
@@ -198,6 +204,11 @@ class Dog(Game):
             or not.Tests 3, 4 and 5"""
         actions = []
         player = self.state.list_player[self.state.idx_player_active]
+        start_position = Dog.BOARD["starts"][self.state.idx_player_active]
+
+        # Check if start position occupied by same player's marble
+        if any(marble.pos == start_position for marble in player.list_marble):
+            return actions
 
         # Case 1: All marbles are in the kennel, no start cards
         if all(marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active] for marble in player.list_marble):
@@ -219,7 +230,6 @@ class Dog(Game):
                 actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
         # Further logic for additional game phases or card actions can go here...
-
         return actions
 
     def apply_action(self, action: Action) -> None:
@@ -255,7 +265,32 @@ class Dog(Game):
 
         else:
             # Handle specific actions provided as input
-            pass
+            if action.pos_from is not None and action.pos_to is not None: # Check if action is moving a marble
+                # Find the marble
+                marble = next((m for m in current_player.list_marble if m.pos == action.pos_from), None)
+                if marble:
+                    # Update marble position
+                    marble.pos = action.pos_to
+                    # Moving from the kennel to the start position
+                    start_position = Dog.BOARD["starts"][self.state.idx_player_active]
+                    if action.pos_to == start_position:
+                        # Check if opponent's marble is on the start position
+                        opponent_marble = None
+                        for opponent in self.state.list_player:
+                            if opponent != current_player: # Skip current player
+                                opponent_marble = next((m for m in opponent.list_marble if m.pos == start_position), None)
+                                if opponent_marble:
+                                    # Send opponent's marble back to kennel
+                                    opponent_marble.pos = next(pos for pos in Dog.BOARD["kennels"][self.state.list_player.index(opponent)]
+                                                               if all(m.pos != pos for m in opponent.list_marble)) # Find empty kennel spot
+                                    break
+
+                        # Update player's marble position
+                        marble.pos = action.pos_to
+                        marble.is_save = True
+                    else:
+                        # Standard marble movement
+                        marble.pos = action.pos_to
 
         # Check if reshuffle is required before processing any actions. Test 50
         if not self.state.list_card_draw:
