@@ -1,5 +1,5 @@
 # runcmd: cd ../.. & venv\Scripts\python server/py/dog_template.py
-from server.py.game import Game, Player
+from game import Game, Player
 from typing import List, Optional, ClassVar
 from pydantic import BaseModel
 from enum import Enum
@@ -245,7 +245,8 @@ class Dog(Game):
 
             if actions:
                 # Select and apply an action (AI or user input)
-                action = RandomPlayer.select_action(current_player, actions)
+                random_player = RandomPlayer()  # Instantiate the RandomPlayer object
+                action = random_player.select_action(self.state, actions)
                 self.apply_action(action)
                 print(f"{current_player.name} played {action.card.rank}{action.card.suit}.")
             else:
