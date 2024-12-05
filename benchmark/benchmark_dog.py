@@ -228,7 +228,7 @@ class DogBenchmark(benchmark.Benchmark):
         player.list_card = [Card(suit='♦', rank='A')]
         player2 = state.list_player[idx_player_active + 1]
         player2.list_marble[0].pos = 0
-        player2.list_marble[0].is_save = True
+        player2.list_marble[0].is_save = False
         self.game_server.set_state(state)
         str_state_1 = str(state)
 
@@ -2145,4 +2145,9 @@ if __name__ == '__main__':
         sys.exit()
 
     benchmark = DogBenchmark(argv=sys.argv)
-    benchmark.run_tests()
+    
+    if True:  # Run all tests
+        benchmark.run_tests()
+    
+    else: # Run specific test(s)
+        benchmark.test_stock_out_of_cards()
