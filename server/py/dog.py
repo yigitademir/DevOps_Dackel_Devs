@@ -324,6 +324,31 @@ class Dog(Game):
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
         pass
 
+    def move_marble(self, marble: Marble, pos_to: int, player: PlayerState, check_collision: bool = True) -> bool:
+        """
+        Move marble to a new position. And check collision with opponent's marbles.
+        Returns: True if move is successful, False otherwise.
+        """
+        board = Dog.BOARD
+
+        # Check if position valid
+        if pos_to not in board["common_track"] + board["finishes"][self.state.list_player.index(player)]:
+            print(f"Invalid move to {pos_to}.")
+            return False
+
+        # Handle collisions with opponent marble
+        if check_collision:
+            for opponent in self.state.list_player:
+                if opponent != player:
+                    for opponent_marble in opponent.list_marble:
+                        if opponent_marble.pos == pos_to:
+                            # Send opponent's marble back to kennel
+                            opponent_marble.pos = next(pos for pos in board["kennels"][self.state.list_player.index(opponent)]
+                                                       if all(m.pos != pos for m in opponent.list_marble)) # Find empty kennel position
+                            break
+
+        marble.pos = pos_to
+
     def play_game(self):
         """Run the game automatically from start to finish."""
         print("Game started!\nFirst round!")
