@@ -217,6 +217,10 @@ class Dog(Game):
         # Game start: Checking if any marbles are in the kennel
         if any(marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active] for marble in player.list_marble):
 
+            # Check for self-block on start position
+            if any(marble.pos == start_position and marble.is_save == True for marble in player.list_marble):
+                return actions
+
             # Create a list of start cards (e.g., Ace, King, Joker)
             start_cards = [card for card in player.list_card if card.rank in ["A", "K", "JKR"]]
 
