@@ -24,7 +24,7 @@ class Card(BaseModel):
 
 class Marble(BaseModel):
     pos: int       # position on board (0 to 95)
-    is_save: bool  # true if marble was moved out of kennel and was not yet moved
+    is_save: bool = False # true if marble was moved out of kennel and was not yet moved
 
 
 class PlayerState(BaseModel):
@@ -332,7 +332,7 @@ class Dog(Game):
         board = Dog.BOARD
 
         # Check if position valid
-        if pos_to not in board["common_track"] + board["finishes"][self.state.list_player.index(player)]:
+        if pos_to not in board["common_track"] + board["finishes"][self.state.idx_player_active]:
             print(f"Invalid move to {pos_to}.")
             return False
 
@@ -348,6 +348,15 @@ class Dog(Game):
                             break
 
         marble.pos = pos_to
+
+        # Check if marble moving from kennel to start position
+        kennel_positions = board["kennels"][self.state.idx_player_active]
+        start_position = board["starts"][self.state.idx_player_active]
+
+        if marble.pos in kennel_positions and pos_to == start_position:
+            marble.is_save = True
+
+        return True
 
     def play_game(self):
         """Run the game automatically from start to finish."""
