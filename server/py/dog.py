@@ -229,8 +229,14 @@ class Dog(Game):
                 # Add the action for this start card
                 actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
-        # Further logic for additional game phases or card actions can go here...
-        return actions
+        validated_actions = []
+
+        # Validation of actions
+        for action in actions:
+            if self.validate_no_overtaking_in_finish(action):
+                validated_actions += action
+            # Further logic for additional game phases or card actions can go here...
+            return validated_actions
 
     def apply_action(self, action: Action) -> None:
         """
@@ -343,6 +349,22 @@ class Dog(Game):
                 player.list_card.append(self.state.list_card_draw.pop())
 
         print(f"Starting Round {self.state.cnt_round}")
+
+    def validate_no_overtaking_in_finish(self, action):
+        """Make sure the marbles cannot be overtaken in the finish"""
+        # The function returns true or false
+        player = self.state.list_player[self.state.idx_player_active]
+        finish_position = Dog.BOARD["finishes"][self.state.idx_player_active]
+
+        # Check if the action involves the finish area
+        if action.pos_from in finish_position or action.pos_to in finish_position:
+            # Ensure no marble in the finish area is overtaken or replaced
+            for marble in player.list_marble:
+                if marble.pos in finish_position and marble.pos >= action.pos_to:
+                    # A marble would be overtaken or replaced
+                    return False
+
+        return True # Action is valid, on overtaking in the finish
 
 class RandomPlayer(Player):
 
