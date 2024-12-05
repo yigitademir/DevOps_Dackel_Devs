@@ -204,6 +204,11 @@ class Dog(Game):
             or not.Tests 3, 4 and 5"""
         actions = []
         player = self.state.list_player[self.state.idx_player_active]
+        start_position = Dog.BOARD["starts"][self.state.idx_player_active]
+
+        # Check if start position occupied by same player's marble
+        if any(marble.pos == start_position for marble in player.list_marble):
+            return actions
 
         # Case 1: All marbles are in the kennel, no start cards
         if all(marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active] for marble in player.list_marble):
@@ -225,7 +230,6 @@ class Dog(Game):
                 actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
         # Further logic for additional game phases or card actions can go here...
-
         return actions
 
     def apply_action(self, action: Action) -> None:
@@ -261,7 +265,7 @@ class Dog(Game):
 
         else:
             # Handle specific actions provided as input
-            if action.pos_from is not None and action.pos_to is not None:
+            if action.pos_from is not None and action.pos_to is not None: # Check if action is moving a marble
                 # Find the marble
                 marble = next((m for m in current_player.list_marble if m.pos == action.pos_from), None)
                 if marble:
