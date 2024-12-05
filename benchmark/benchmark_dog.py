@@ -429,6 +429,7 @@ class DogBenchmark(benchmark.Benchmark):
 
             hint = str_state
             hint += f'Error 1: "get_list_action" must return {len(list_action_expected)} not {len(list_action_found)} actions'
+            hint += f'\nHint: pos_from must be smaller than pos_to in order not to have duplicate actions with same effect'
             assert len(list_action_found) == len(list_action_expected), hint
 
             hint = str_state
@@ -441,7 +442,7 @@ class DogBenchmark(benchmark.Benchmark):
             assert self.get_sorted_list_action(list_action_found) == self.get_sorted_list_action(list_action_expected), hint
 
     def test_swap_with_JAKE_2(self):
-        """Test 022: Test swap list_actions with card JAKE no oponents an no other actions [1 point]"""
+        """Test 022: Test swap list_actions with card JAKE no oponents and no other actions [1 point]"""
 
         list_card = [Card(suit='♣', rank='J'), Card(suit='♦', rank='J'), Card(suit='♥', rank='J'), Card(suit='♠', rank='J')]
 
@@ -469,12 +470,12 @@ class DogBenchmark(benchmark.Benchmark):
 
             list_action_found = self.game_server.get_list_action()
             list_action_expected = [
-                Action(card=card, pos_from=0, pos_to=1),
-                Action(card=card, pos_from=1, pos_to=0)
+                Action(card=card, pos_from=0, pos_to=1)
             ]
 
             hint = str_state
             hint +=f'Error 1: "get_list_action" must return {len(list_action_expected)} not {len(list_action_found)} actions'
+            hint += f'\nHint: pos_from must be smaller than pos_to in order not to have duplicate actions with same effect'
             assert len(list_action_found) == len(list_action_expected), hint
 
             hint = str_state
