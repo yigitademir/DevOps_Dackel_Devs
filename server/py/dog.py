@@ -293,28 +293,11 @@ class Dog(Game):
                 # Find the marble
                 marble = next((m for m in current_player.list_marble if m.pos == action.pos_from), None)
                 if marble:
-                    # Update marble position
-                    marble.pos = action.pos_to
-                    # Moving from the kennel to the start position
-                    start_position = Dog.BOARD["starts"][self.state.idx_player_active]
-                    if action.pos_to == start_position:
-                        # Check if opponent's marble is on the start position
-                        opponent_marble = None
-                        for opponent in self.state.list_player:
-                            if opponent != current_player: # Skip current player
-                                opponent_marble = next((m for m in opponent.list_marble if m.pos == start_position), None)
-                                if opponent_marble:
-                                    # Send opponent's marble back to kennel
-                                    opponent_marble.pos = next(pos for pos in Dog.BOARD["kennels"][self.state.list_player.index(opponent)]
-                                                               if all(m.pos != pos for m in opponent.list_marble)) # Find empty kennel spot
-                                    break
-
-                        # Update player's marble position
-                        marble.pos = action.pos_to
-                        marble.is_save = True
+                    movement_success = self.move_marble(marble, action.pos_to, current_player)
+                    if movement_success:
+                        print(f"Marble moved from {action.pos_from} to {action.pos_to}.")
                     else:
-                        # Standard marble movement
-                        marble.pos = action.pos_to
+                        print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
 
         # Check if reshuffle is required before processing any actions. Test 50
         if not self.state.list_card_draw:
@@ -347,6 +330,7 @@ class Dog(Game):
                                                        if all(m.pos != pos for m in opponent.list_marble)) # Find empty kennel position
                             break
 
+        # Move marble
         marble.pos = pos_to
 
         # Check if marble moving from kennel to start position
