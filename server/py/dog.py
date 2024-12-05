@@ -191,28 +191,21 @@ class Dog(Game):
         player = self.state.list_player[self.state.idx_player_active]
         start_position = Dog.BOARD["starts"][self.state.idx_player_active]
 
-        # Check if start position occupied by same player's marble
-        if any(marble.pos == start_position for marble in player.list_marble):
-            return actions
-
-        # Case 1: All marbles are in the kennel, no start cards
+        # Game start: All marbles are in the kennel
         if all(marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active] for marble in player.list_marble):
-            # Filter for start cards (e.g., Ace, King, Joker)
+
+            # Create a list of start cards (e.g., Ace, King, Joker)
             start_cards = [card for card in player.list_card if card.rank in ["A", "K", "JKR"]]
 
-            # No start cards available, return empty actions list
-            if not start_cards:
-                return actions
-
-            # Case 2 & 3: At least one start card
-            # Add actions for each start card to move a marble out of the kennel
-            for card in start_cards:
-                # Determine the starting position for the active player
-                pos_from = Dog.BOARD["kennels"][self.state.idx_player_active][0]  # First kennel position
-                pos_to = Dog.BOARD["common_track"][0]  # Start of the track
-
-                # Add the action for this start card
-                actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
+            # Check if player has start action or not and get corresponding action
+            if start_cards:
+                for card in start_cards:
+                    # Determine the starting position for the active player
+                    pos_from = Dog.BOARD["kennels"][self.state.idx_player_active][0]  # First kennel position
+                    pos_to = Dog.BOARD["common_track"][0]  # Start of the track
+                    actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to)) # Case test 004, 005: the action for the start card
+                else:
+                    return actions  # Case test 003: No start cards available, return empty actions list
 
         validated_actions = []
 
@@ -221,7 +214,8 @@ class Dog(Game):
             if self.validate_no_overtaking_in_finish(action):
                 validated_actions += action
             # Further logic for additional game phases or card actions can go here...
-            return validated_actions
+
+        return validated_actions
 
     def apply_action(self, action: Action) -> None:
         """
