@@ -164,11 +164,6 @@ class Dog(Game):
         self.state.idx_player_active = self.state.idx_player_started
         self.cnt_none = 0
 
-    def shuffle_deck(self):
-        """Shuffle the card deck."""
-        random.shuffle(self.state.LIST_CARD)
-        self.state.list_card_draw = self.state.LIST_CARD.copy() # Set draw pile
-
     def reshuffle_cards(self) -> None:
         """Reshuffle cards from the discard pile to the draw pile if needed. Test 50"""
         if self.state.list_card_discard:
