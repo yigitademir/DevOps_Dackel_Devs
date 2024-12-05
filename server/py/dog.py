@@ -10,6 +10,9 @@ class Card(BaseModel):
     suit: str  # card suit (color)
     rank: str  # card rank
 
+    # Add __eq__ and __hash__ methods to the Card class so that
+    # it can be included in hashable objects like sets or dictionaries.
+
     def __eq__(self, other):
         if not isinstance(other, Card):
             return False
@@ -36,6 +39,9 @@ class Action(BaseModel):
     pos_from: Optional[int]    # position to move the marble from
     pos_to: Optional[int]      # position to move the marble to
     card_swap: Optional[Card] = None  # optional card to swap ()
+
+    # Add __eq__ and __hash__ methods to the Action class so that
+    # it can be included in hashable objects like sets or dictionaries.
 
     def __eq__(self, other):
         if not isinstance(other, Action):
