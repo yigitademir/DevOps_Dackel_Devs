@@ -10,6 +10,14 @@ class Card(BaseModel):
     suit: str  # card suit (color)
     rank: str  # card rank
 
+    def __eq__(self, other):
+        if not isinstance(other, Card):
+            return False
+        return self.suit == other.suit and self.rank == other.rank
+
+    def __hash__(self):
+        return hash((self.suit, self.rank))
+
 
 class Marble(BaseModel):
     pos: int       # position on board (0 to 95)
@@ -29,6 +37,15 @@ class Action(BaseModel):
     pos_to: Optional[int]      # position to move the marble to
     card_swap: Optional[Card] = None  # optional card to swap ()
 
+    def __eq__(self, other):
+        if not isinstance(other, Action):
+            return False
+        return (self.card == other.card and
+                self.pos_from == other.pos_from and
+                self.pos_to == other.pos_to)
+
+    def __hash__(self):
+        return hash((self.card, self.pos_from, self.pos_to))
 
 class GamePhase(str, Enum):
     SETUP = 'setup'            # before the game has started
@@ -191,8 +208,8 @@ class Dog(Game):
         player = self.state.list_player[self.state.idx_player_active]
         start_position = Dog.BOARD["starts"][self.state.idx_player_active]
 
-        # Game start: All marbles are in the kennel
-        if all(marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active] for marble in player.list_marble):
+        # Game start: Checking if any marbles are in the kennel
+        if any(marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active] for marble in player.list_marble):
 
             # Create a list of start cards (e.g., Ace, King, Joker)
             start_cards = [card for card in player.list_card if card.rank in ["A", "K", "JKR"]]
@@ -207,15 +224,26 @@ class Dog(Game):
                 else:
                     return actions  # Case test 003: No start cards available, return empty actions list
 
-        validated_actions = []
+        # Actions for marbles outside of kennel
+        for marble in player.list_marble:
+            if marble.pos not in Dog.BOARD["kennels"][self.state.idx_player_active]:  # Marble is outside the kennel
+                for card in player.list_card:
+                    if card.rank in Dog.RANK_ACTIONS:  # Ensure the card rank is valid
+                        # Loop through all possible moves for the card
+                        for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
+                            new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
+                            actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+
+        validated_actions = set() # Using set for uniqueness
 
         # Validation of actions
         for action in actions:
-            if self.validate_no_overtaking_in_finish(action):
-                validated_actions += action
-            # Further logic for additional game phases or card actions can go here...
+            if action not in validated_actions: # checking for duplicated actions
+                if self.validate_no_overtaking_in_finish(action): # checking overtaking in finish
+                    validated_actions.add(action)
+                # Further logic for additional game phases or card actions can go here...
 
-        return validated_actions
+        return list(validated_actions) # Ensuring to return a list
 
     def apply_action(self, action: Action) -> None:
         """
