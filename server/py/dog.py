@@ -164,16 +164,6 @@ class Dog(Game):
         self.state.idx_player_active = self.state.idx_player_started
         self.cnt_none = 0
 
-    def reshuffle_cards(self) -> None:
-        """Reshuffle cards from the discard pile to the draw pile if needed. Test 50"""
-        if self.state.list_card_discard:
-            # Transfer all cards from discard to draw pile
-            self.state.list_card_draw.extend(self.state.list_card_discard)
-            # Clear the discard pile
-            self.state.list_card_discard.clear()
-            # Shuffle the draw pile
-            random.shuffle(self.state.list_card_draw)
-
     def set_state(self, state: GameState) -> None:
         self.state = state
 
@@ -344,6 +334,16 @@ class Dog(Game):
                 player.list_card.append(self.state.list_card_draw.pop())
 
         print(f"Starting Round {self.state.cnt_round}")
+
+    def reshuffle_cards(self) -> None:
+        """Reshuffle cards from the discard pile to the draw pile if needed. Test 50"""
+        if self.state.list_card_discard:
+            # Transfer all cards from discard to draw pile
+            self.state.list_card_draw.extend(self.state.list_card_discard)
+            # Clear the discard pile
+            self.state.list_card_discard.clear()
+            # Shuffle the draw pile
+            random.shuffle(self.state.list_card_draw)
 
     def validate_no_overtaking_in_finish(self, action):
         """Make sure the marbles cannot be overtaken in the finish"""
