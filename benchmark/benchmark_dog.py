@@ -424,12 +424,23 @@ class DogBenchmark(benchmark.Benchmark):
                 Action(card=card, pos_from=0, pos_to=49),
                 Action(card=card, pos_from=1, pos_to=17),
                 Action(card=card, pos_from=1, pos_to=33),
-                Action(card=card, pos_from=1, pos_to=49)
+                Action(card=card, pos_from=1, pos_to=49),
+                Action(card=card, pos_from=17, pos_to=0),
+                Action(card=card, pos_from=33, pos_to=0),
+                Action(card=card, pos_from=49, pos_to=0),
+                Action(card=card, pos_from=17, pos_to=1),
+                Action(card=card, pos_from=33, pos_to=1),
+                Action(card=card, pos_from=49, pos_to=1)
             ]
 
             hint = str_state
             hint += f'Error 1: "get_list_action" must return {len(list_action_expected)} not {len(list_action_found)} actions'
-            hint += f'\nHint: pos_from must be smaller than pos_to in order not to have duplicate actions with same effect'
+            hint += f'\nExpected actions:'
+            for action in list_action_expected:
+                    hint += f'\n - {action}'
+            hint += f'\nFound actions:'
+            for action in list_action_found:
+                    hint += f'\n - {action}'
             assert len(list_action_found) == len(list_action_expected), hint
 
             hint = str_state
@@ -470,12 +481,18 @@ class DogBenchmark(benchmark.Benchmark):
 
             list_action_found = self.game_server.get_list_action()
             list_action_expected = [
-                Action(card=card, pos_from=0, pos_to=1)
+                Action(card=card, pos_from=0, pos_to=1),
+                Action(card=card, pos_from=1, pos_to=0)
             ]
 
             hint = str_state
             hint +=f'Error 1: "get_list_action" must return {len(list_action_expected)} not {len(list_action_found)} actions'
-            hint += f'\nHint: pos_from must be smaller than pos_to in order not to have duplicate actions with same effect'
+            hint += f'\nExpected actions:'
+            for action in list_action_expected:
+                    hint += f'\n - {action}'
+            hint += f'\nFound actions:'
+            for action in list_action_found:
+                    hint += f'\n - {action}'
             assert len(list_action_found) == len(list_action_expected), hint
 
             hint = str_state
