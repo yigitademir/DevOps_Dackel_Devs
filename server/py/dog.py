@@ -411,6 +411,34 @@ class Dog(Game):
         marble.pos = pos_to
         return True
 
+    def generate_seven_actions(self, actions: List[Action], player: PlayerState):
+        """Generate possible actions with card 7(single move or split) """
+        card = Card(rank ="7", suit = "")
+        kennel_position = Dog.BOARD["kennels"][self.state.idx_player_active]
+
+        # Check if there are any marble out of kennel
+        marbles = [marble for marble in player.list_marble if marble.pos not in kennel_position]
+        if not marbles:
+            return
+
+        # Single move with 7
+        for marble in marbles:
+            new_position = (marble.pos + 7) % len(Dog.BOARD["common_track"])
+            actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))
+
+        # Split move with 7
+        for marble1 in marbles:
+            for marble2 in marbles:
+                if marble1 == marble2:
+                    continue
+                for split1 in range(1,7):
+                    split2 = 7 - split1
+                    pos1 = (marble1.pos + split1) % len(Dog.BOARD["common_track"])
+                    pos2 = (marble2.pos + split2) % len(Dog.BOARD["common_track"])
+                    actions.append(Action(card=card, pos_from=marble1.pos, pos_to=pos1))
+                    actions.append(Action(card=card, pos_from=marble2.pos, pos_to=pos2))
+
+
     def play_game(self):
         """Run the game automatically from start to finish."""
         print("Game started!\nFirst round!")
