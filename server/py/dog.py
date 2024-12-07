@@ -337,18 +337,22 @@ class Dog(Game):
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
         pass
 
-    def move_marble(self, marble: Marble, pos_to: int, player: PlayerState, check_collision: bool = True) -> bool:
+    def move_marble(self, marble: Marble, card: Card, pos_to: int, player: PlayerState, check_collision: bool = True) -> bool:
         """
         Move marble to a new position and handle collisions.
         If a marble is at the destination, it is sent back to its kennel.
         Returns: True if the move is successful, False otherwise.
         """
         board = Dog.BOARD
+        valid_steps = card.get_steps() # Get the steps allowed for the card
+        current_pos = marble.pos
+
+        # Determine valid positions based on steps.
+        valid_positions = [(current_pos + step) % len(board["common_track"]) for step in valid_steps]
 
         # Check if the move is valid
-        valid_positions = board["common_track"] + board["finishes"][self.state.idx_player_active]
         if pos_to not in valid_positions:
-            print(f"Invalid move: position {pos_to} is not on the board.")
+            print(f"Invalid move: position {pos_to} is not reachable using card {card.rank}.")
             return False
 
         # Handle collisions
@@ -377,15 +381,15 @@ class Dog(Game):
                 print(f"Invalid move: cannot overtake within the finish line to position {pos_to}.")
                 return False
 
-        # Move the marble
-        marble.pos = pos_to
-
         # Handle "is_save" status when moving out of the kennel
         kennel_positions = board["kennels"][self.state.idx_player_active]
         start_position = board["starts"][self.state.idx_player_active]
         if marble.pos in kennel_positions and pos_to == start_position:
             marble.is_save = True
+            print(f"Marble moved to start position {pos_to} and is now safe.")
 
+        # Move the marble
+        marble.pos = pos_to
         return True
 
     def play_game(self):
