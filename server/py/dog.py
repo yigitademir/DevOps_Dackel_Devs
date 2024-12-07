@@ -339,37 +339,56 @@ class Dog(Game):
 
     def move_marble(self, marble: Marble, pos_to: int, player: PlayerState, check_collision: bool = True) -> bool:
         """
-        Move marble to a new position. And check collision with opponent's marbles.
-        Returns: True if move is successful, False otherwise.
+        Move marble to a new position and handle collisions.
+        If a marble is at the destination, it is sent back to its kennel.
+        Returns: True if the move is successful, False otherwise.
         """
         board = Dog.BOARD
 
-        # Check if position valid
-        if pos_to not in board["common_track"] + board["finishes"][self.state.idx_player_active]:
-            print(f"Invalid move to {pos_to}.")
+        # Check if the move is valid
+        valid_positions = board["common_track"] + board["finishes"][self.state.idx_player_active]
+        if pos_to not in valid_positions:
+            print(f"Invalid move: position {pos_to} is not on the board.")
             return False
 
-        # Handle collisions with opponent marble
+        # Handle collisions
         if check_collision:
-            for opponent in self.state.list_player:
-                if opponent != player:
-                    for opponent_marble in opponent.list_marble:
-                        if opponent_marble.pos == pos_to:
-                            # Send opponent's marble back to kennel
-                            opponent_marble.pos = next(pos for pos in board["kennels"][self.state.list_player.index(opponent)]
-                                                       if all(m.pos != pos for m in opponent.list_marble)) # Find empty kennel position
-                            break
+            for other_player in self.state.list_player:
+                for other_marble in other_player.list_marble:
+                    if other_marble.pos == pos_to:  # Collision detected
+                        # Send the marble back to the kennel
+                        empty_kennel_positions = [
+                            pos for pos in board["kennels"][self.state.list_player.index(other_player)]
+                            if all(m.pos != pos for m in other_player.list_marble)
+                        ]
+                        other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
+                        print(
+                            f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}."
+                        )
+                        break
 
-        # Move marble
+                else:
+                    continue
+                break
+
+        # Handle finishing line rules
+        finish_positions = board["finishes"][self.state.list_player.index(player)]
+        if marble.pos in finish_positions and pos_to in finish_positions:
+            # Ensure no overtaking inside the finish line
+            if pos_to > max(m.pos for m in player.list_marble if m.pos in finish_positions):
+                print(f"Invalid move: cannot overtake within the finish line to position {pos_to}.")
+                return False
+
+        # Move the marble
         marble.pos = pos_to
 
-        # Check if marble moving from kennel to start position
+        # Handle "is_save" status when moving out of the kennel
         kennel_positions = board["kennels"][self.state.idx_player_active]
         start_position = board["starts"][self.state.idx_player_active]
-
         if marble.pos in kennel_positions and pos_to == start_position:
             marble.is_save = True
 
+        print(f"Marble moved successfully to position {pos_to}.")
         return True
 
     def play_game(self):
