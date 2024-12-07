@@ -377,15 +377,15 @@ class Dog(Game):
                 print(f"Invalid move: cannot overtake within the finish line to position {pos_to}.")
                 return False
 
-        # Move the marble
-        marble.pos = pos_to
-
         # Handle "is_save" status when moving out of the kennel
         kennel_positions = board["kennels"][self.state.idx_player_active]
         start_position = board["starts"][self.state.idx_player_active]
         if marble.pos in kennel_positions and pos_to == start_position:
             marble.is_save = True
+            print(f"Marble moved to start position {pos_to} and is now safe.")
 
+        # Move the marble
+        marble.pos = pos_to
         return True
 
     def play_game(self):
