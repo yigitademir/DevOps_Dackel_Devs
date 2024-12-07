@@ -19,6 +19,12 @@ class Card(BaseModel):
 
     def __hash__(self):
         return hash((self.suit, self.rank))
+    
+    def get_steps(self):
+        # Map rank to allowed steps
+        step_mapping = {'A': [1, 11], '2': [2], '3': [3], '4': [4], '5': [5],
+                        '6': [6], '8': [8], '9': [9], '10': [10], 'Q': [12], 'K': [13]}
+        return step_mapping.get(self.rank, [])
 
 
 class Marble(BaseModel):
@@ -212,6 +218,7 @@ class Dog(Game):
         actions = []
         player = self.state.list_player[self.state.idx_player_active]
         start_position = Dog.BOARD["starts"][self.state.idx_player_active]
+        state = self.get_state()
 
         # Game start: Checking if any marbles are in the kennel
         if any(marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active] for marble in player.list_marble):
@@ -243,6 +250,30 @@ class Dog(Game):
                             new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
                             actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
 
+        # Function checks if actions are not overtaking a blocking marble
+
+        def filter_invalid_actions_save_marble(actions, state):
+            filtered_actions = []
+            
+        
+            for action in actions:
+                action_valid = True
+
+                for player in state.list_player:
+                    for marble in player.list_marble:
+                        if marble.is_save:
+                            if action.pos_from < marble.pos <= action.pos_to:
+                                action_valid = False
+                                break
+                    if not action_valid:
+                        break
+                if action_valid:
+                    filtered_actions.append(action)
+            
+            return filtered_actions
+        
+        actions = filter_invalid_actions_save_marble(actions, state)
+        
         validated_actions = set() # Using set for uniqueness
 
         # Validation of actions
