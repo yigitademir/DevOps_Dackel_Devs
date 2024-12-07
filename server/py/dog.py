@@ -220,6 +220,13 @@ class Dog(Game):
         start_position = Dog.BOARD["starts"][self.state.idx_player_active]
         state = self.get_state()
 
+        for self.state.idx_player_active in range(self.state.cnt_player):
+            if self.state.bool_card_exchanged == False: 
+                for card in player.list_card:
+                    actions.append = Action(card=card, pos_from = None, pos_to = None)
+            return actions
+    
+
         # Game start: Checking if any marbles are in the kennel
         if any(marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active] for marble in player.list_marble):
 
@@ -389,6 +396,7 @@ class Dog(Game):
         self.state.idx_player_active = (self.state.idx_player_started + self.state.cnt_round - 1) % self.state.cnt_player
         # self.state.idx_player_active = self.state.idx_player_started
         self.deal_cards_to_players()
+        self.state.bool_card_exchanged = False # set exchange to false for all players
 
     def check_game_end(self):
         """Check if the game-ending condition is met."""
