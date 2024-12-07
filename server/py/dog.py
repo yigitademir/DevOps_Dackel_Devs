@@ -337,18 +337,22 @@ class Dog(Game):
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
         pass
 
-    def move_marble(self, marble: Marble, pos_to: int, player: PlayerState, check_collision: bool = True) -> bool:
+    def move_marble(self, marble: Marble, card: Card, pos_to: int, player: PlayerState, check_collision: bool = True) -> bool:
         """
         Move marble to a new position and handle collisions.
         If a marble is at the destination, it is sent back to its kennel.
         Returns: True if the move is successful, False otherwise.
         """
         board = Dog.BOARD
+        valid_steps = card.get_steps() # Get the steps allowed for the card
+        current_pos = marble.pos
+
+        # Determine valid positions based on steps.
+        valid_positions = [(current_pos + step) % len(board["common_track"]) for step in valid_steps]
 
         # Check if the move is valid
-        valid_positions = board["common_track"] + board["finishes"][self.state.idx_player_active]
         if pos_to not in valid_positions:
-            print(f"Invalid move: position {pos_to} is not on the board.")
+            print(f"Invalid move: position {pos_to} is not reachable using card {card.rank}.")
             return False
 
         # Handle collisions
