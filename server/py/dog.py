@@ -323,7 +323,7 @@ class Dog(Game):
                 # Find the marble
                 marble = next((m for m in current_player.list_marble if m.pos == action.pos_from), None)
                 if marble:
-                    movement_success = self.move_marble(marble, action.pos_to, current_player)
+                    movement_success = self.move_marble(marble, action.card, action.pos_to, current_player)
                     if movement_success:
                         print(f"Marble moved from {action.pos_from} to {action.pos_to}.")
                     else:
