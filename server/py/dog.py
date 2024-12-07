@@ -218,10 +218,11 @@ class Dog(Game):
         actions = []
         player = self.state.list_player[self.state.idx_player_active]
         start_position = Dog.BOARD["starts"][self.state.idx_player_active]
+        kennel_position = Dog.BOARD["kennels"][self.state.idx_player_active]
         state = self.get_state()
 
         # Game start: Checking if any marbles are in the kennel
-        if any(marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active] for marble in player.list_marble):
+        if any(marble.pos in kennel_position for marble in player.list_marble):
 
             # Check for self-block on start position
             if any(marble.pos == start_position and marble.is_save == True for marble in player.list_marble):
@@ -231,14 +232,10 @@ class Dog(Game):
             start_cards = [card for card in player.list_card if card.rank in ["A", "K", "JKR"]]
 
             # Check if player has start action or not and get corresponding action
-            if start_cards:
-                for card in start_cards:
-                    # Determine the starting position for the active player
-                    pos_from = Dog.BOARD["kennels"][self.state.idx_player_active][0]  # First kennel position
-                    pos_to = Dog.BOARD["common_track"][0]  # Start of the track
-                    actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to)) # Case test 004, 005: the action for the start card
-                else:
-                    return actions  # Case test 003: No start cards available, return empty actions list
+            for card in start_cards:
+                pos_from = kennel_position[0]
+                pos_to = start_position
+                actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
         # Actions for marbles outside of kennel
         for marble in player.list_marble:
@@ -370,10 +367,24 @@ class Dog(Game):
         Returns: True if the move is successful, False otherwise.
         """
         board = Dog.BOARD
-        valid_steps = card.get_steps() # Get the steps allowed for the card
         current_pos = marble.pos
 
+        # Moving out of kennel
+        kennel_positions = board["kennels"][self.state.idx_player_active]
+        start_position = board["starts"][self.state.idx_player_active]
+        if marble.pos in kennel_positions and pos_to == start_position:
+            marble.is_save = True
+            print(f"Marble moved to start position {pos_to} and is now safe.")
+            marble.pos = pos_to
+            return True
+
+        # Reset is_save after move away from start position
+        if marble.pos == start_position and pos_to != start_position:
+            marble.is_save = False
+            print(f"Marble moved out of start position and is no longer safe.")
+
         # Determine valid positions based on steps.
+        valid_steps = card.get_steps()  # Get the steps allowed for the card
         valid_positions = [(current_pos + step) % len(board["common_track"]) for step in valid_steps]
 
         # Check if the move is valid
@@ -393,13 +404,6 @@ class Dog(Game):
             if pos_to > max(m.pos for m in player.list_marble if m.pos in finish_positions):
                 print(f"Invalid move: cannot overtake within the finish line to position {pos_to}.")
                 return False
-
-        # Handle "is_save" status when moving out of the kennel
-        kennel_positions = board["kennels"][self.state.idx_player_active]
-        start_position = board["starts"][self.state.idx_player_active]
-        if marble.pos in kennel_positions and pos_to == start_position:
-            marble.is_save = True
-            print(f"Marble moved to start position {pos_to} and is now safe.")
 
         # Move the marble
         marble.pos = pos_to
