@@ -355,21 +355,19 @@ class Dog(Game):
         if check_collision:
             for other_player in self.state.list_player:
                 for other_marble in other_player.list_marble:
-                    if other_marble.pos == pos_to:  # Collision detected
-                        # Send the marble back to the kennel
-                        empty_kennel_positions = [
-                            pos for pos in board["kennels"][self.state.list_player.index(other_player)]
-                            if all(m.pos != pos for m in other_player.list_marble)
-                        ]
-                        other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
-                        print(
-                            f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}."
-                        )
+                    # Check if there's a marble at the destination and it's not safe
+                    if other_marble.pos == pos_to:
+                        if other_marble.is_save:
+                            print(f"Impossible, marble at position {other_marble.pos} is safe.")
+                        else:
+                            # Send the marble back to the kennel
+                            empty_kennel_positions = [
+                                pos for pos in board["kennels"][self.state.list_player.index(other_player)]
+                                if all(m.pos != pos for m in other_player.list_marble)
+                            ]
+                            other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
+                            print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.")
                         break
-
-                else:
-                    continue
-                break
 
         # Handle finishing line rules
         finish_positions = board["finishes"][self.state.list_player.index(player)]
@@ -388,7 +386,6 @@ class Dog(Game):
         if marble.pos in kennel_positions and pos_to == start_position:
             marble.is_save = True
 
-        print(f"Marble moved successfully to position {pos_to}.")
         return True
 
     def play_game(self):
