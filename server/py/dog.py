@@ -373,6 +373,8 @@ class Dog(Game):
         kennel_positions = board["kennels"][self.state.idx_player_active]
         start_position = board["starts"][self.state.idx_player_active]
         if marble.pos in kennel_positions and pos_to == start_position:
+            if not self.handle_collision(pos_to, player):
+                return False
             marble.is_save = True
             print(f"Marble moved to start position {pos_to} and is now safe.")
             marble.pos = pos_to
