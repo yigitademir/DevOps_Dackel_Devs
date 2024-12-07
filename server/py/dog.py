@@ -337,7 +337,33 @@ class Dog(Game):
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
         pass
 
-    def move_marble(self, marble: Marble, card: Card, pos_to: int, player: PlayerState, check_collision: bool = True) -> bool:
+    def handle_collision(self, pos_to: int, player: PlayerState) -> bool:
+        """
+        Handle collisions when a marble moves to a new position.
+        If a marble is at the destination, it is sent back to its kennel.
+        Returns True if no collision or collision is handled, False if collision is not resolved.
+        """
+        board = Dog.BOARD
+        
+        # Check for collisions with other marbles
+        for other_player in self.state.list_player:
+            for other_marble in other_player.list_marble:
+                if other_marble.pos == pos_to:
+                    if other_marble.is_save:
+                        print(f"Impossible, marble at position {other_marble.pos} is safe.")
+                        return False
+                    else:
+                        # Send the marble back to the kennel
+                        empty_kennel_positions = [
+                            pos for pos in board["kennels"][self.state.list_player.index(other_player)]
+                            if all(m.pos != pos for m in other_player.list_marble)
+                        ]
+                        other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
+                        print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.")
+                        return True
+        return True
+    
+    def move_marble(self, marble: Marble, card: Card, pos_to: int, player: PlayerState) -> bool:
         """
         Move marble to a new position and handle collisions.
         If a marble is at the destination, it is sent back to its kennel.
@@ -355,23 +381,10 @@ class Dog(Game):
             print(f"Invalid move: position {pos_to} is not reachable using card {card.rank}.")
             return False
 
-        # Handle collisions
-        if check_collision:
-            for other_player in self.state.list_player:
-                for other_marble in other_player.list_marble:
-                    # Check if there's a marble at the destination and it's not safe
-                    if other_marble.pos == pos_to:
-                        if other_marble.is_save:
-                            print(f"Impossible, marble at position {other_marble.pos} is safe.")
-                        else:
-                            # Send the marble back to the kennel
-                            empty_kennel_positions = [
-                                pos for pos in board["kennels"][self.state.list_player.index(other_player)]
-                                if all(m.pos != pos for m in other_player.list_marble)
-                            ]
-                            other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
-                            print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.")
-                        break
+        # Handle collision
+        collision_resolved = self.handle_collision(pos_to, player)
+        if not collision_resolved:
+            return False
 
         # Handle finishing line rules
         finish_positions = board["finishes"][self.state.list_player.index(player)]
