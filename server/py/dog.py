@@ -22,7 +22,7 @@ class Card(BaseModel):
     
     def get_steps(self):
         # Map rank to allowed steps
-        step_mapping = {'A': [1, 11], '2': [2], '3': [3], '4': [4], '5': [5],
+        step_mapping = {'A': [1, 11], '2': [2], '3': [3], '4': [4, -4], '5': [5],
                         '6': [6], '8': [8], '9': [9], '10': [10], 'Q': [12], 'K': [13]}
         return step_mapping.get(self.rank, [])
 
