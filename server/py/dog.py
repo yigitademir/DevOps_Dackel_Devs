@@ -223,12 +223,13 @@ class Dog(Game):
         kennel_position = Dog.BOARD["kennels"][self.state.idx_player_active]
         state = self.get_state()
 
-        for self.state.idx_player_active in range(self.state.cnt_player):
-            if self.state.bool_card_exchanged == False: 
-                for card in player.list_card:
-                    actions.append = Action(card=card, pos_from = None, pos_to = None)
+        if not self.state.bool_card_exchanged:
+            seen_cards = set()
+            for card in player.list_card:
+                if card not in seen_cards:  # Avoid adding duplicate cards
+                    actions.append(Action(card=card, pos_from=None, pos_to=None))
+                    seen_cards.add(card)
             return actions
-    
 
         # Game start: Checking if any marbles are in the kennel
         if any(marble.pos in kennel_position for marble in player.list_marble):
