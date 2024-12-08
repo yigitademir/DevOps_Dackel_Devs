@@ -316,7 +316,9 @@ class Dog(Game):
 
         else:
             # Handle specific actions provided as input
-            if action.pos_from is not None and action.pos_to is not None: # Check if action is moving a marble
+            if action.card.rank == "J":
+                self.exchange_marbles(current_player, action)
+            elif action.pos_from is not None and action.pos_to is not None: # Check if action is moving a marble
                 # Find the marble
                 marble = next((m for m in current_player.list_marble if m.pos == action.pos_from), None)
                 if marble:
@@ -330,6 +332,36 @@ class Dog(Game):
         if not self.state.list_card_draw:
             self.reshuffle_cards()
 
+    def exchange_marbles(self, current_player: PlayerState, action: Action) -> None:
+        """
+        Handle the marble exchange between the current player and an other player.
+        This is called when a Jack card is played.
+        """
+        # Ensure the action has valid positions for both marbles
+        if action.pos_from is None or action.pos_to is None:
+            print("Error: Invalid positions for marble exchange.")
+            return
+
+        # Find the player's marble to exchange
+        own_marble = next((m for m in current_player.list_marble if m.pos == action.pos_from), None)
+        if not own_marble:
+            print(f"Error: Own marble at position {action.pos_from} not found for exchange.")
+            return
+
+        # Find the opponent's marble to exchange with
+        other_player = next((p for p in self.state.list_player if p != current_player), None)
+        other_marble = next((m for m in other_player.list_marble if m.pos == action.pos_to), None)
+        if not other_marble:
+            print(f"Error: Opponent's marble at position {action.pos_to} not found for exchange.")
+            return
+        
+        # Swap positions of the two marbles
+        own_marble.pos, other_marble.pos = other_marble.pos, own_marble.pos
+
+        # Notify about the successful exchange
+        print(f"Marble exchange successful: {current_player.name}'s marble moved to position {own_marble.pos} "
+            f"and {other_player.name}'s marble moved to position {other_marble.pos}.")
+    
     def get_player_view(self, idx_player: int) -> GameState:
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
         pass
