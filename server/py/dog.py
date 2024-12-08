@@ -334,7 +334,7 @@ class Dog(Game):
         """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
         pass
 
-    def handle_collision(self, pos_to: int, player: PlayerState) -> bool:
+    def handle_collision(self, pos_to: int) -> bool:
         """
         Handle collisions when a marble moves to a new position.
         If a marble is at the destination, it is sent back to its kennel.
@@ -373,7 +373,7 @@ class Dog(Game):
         kennel_positions = board["kennels"][self.state.idx_player_active]
         start_position = board["starts"][self.state.idx_player_active]
         if marble.pos in kennel_positions and pos_to == start_position:
-            if not self.handle_collision(pos_to, player):
+            if not self.handle_collision(pos_to):
                 return False
             marble.is_save = True
             print(f"Marble moved to start position {pos_to} and is now safe.")
@@ -395,7 +395,7 @@ class Dog(Game):
             return False
 
         # Handle collision
-        collision_resolved = self.handle_collision(pos_to, player)
+        collision_resolved = self.handle_collision(pos_to)
         if not collision_resolved:
             return False
 
