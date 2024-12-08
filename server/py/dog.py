@@ -24,7 +24,9 @@ class Card(BaseModel):
         # Map rank to allowed steps
         step_mapping = {'A': [1, 11], '2': [2], '3': [3], '4': [4, -4], '5': [5],
                         '6': [6], '8': [8], '9': [9], '10': [10], 'Q': [12], 'K': [13]}
-        return step_mapping.get(self.rank, [])
+        steps = step_mapping.get(self.rank, [])
+        print(f"DEBUG: Card {self.rank} allows steps: {steps}")
+        return steps
 
 
 class Marble(BaseModel):
@@ -388,6 +390,10 @@ class Dog(Game):
         # Determine valid positions based on steps.
         valid_steps = card.get_steps()  # Get the steps allowed for the card
         valid_positions = [(current_pos + step) % len(board["common_track"]) for step in valid_steps]
+        print(f"DEBUG: Valid positions for marble at {current_pos} with card {card.rank}: {valid_positions}")
+
+        if card.rank == "7":
+            return True
 
         # Check if the move is valid
         if pos_to not in valid_positions:
@@ -412,32 +418,75 @@ class Dog(Game):
         return True
 
     def generate_seven_actions(self, actions: List[Action], player: PlayerState):
-        """Generate possible actions with card 7(single move or split) """
-        card = Card(rank ="7", suit = "")
-        kennel_position = Dog.BOARD["kennels"][self.state.idx_player_active]
+        """Generate possible actions with card 7 (single move or split) In progress..... """
+        print("DEBUG: Starting generation of actions for card 7.")
+        card = Card(rank="7")
+        kennel_positions = card["kennels"][self.state.idx_player_active]
+        track_length = len(Dog.BOARD["common_track"])
 
-        # Check if there are any marble out of kennel
-        marbles = [marble for marble in player.list_marble if marble.pos not in kennel_position]
+        # Filter marbles not in kennel
+        marbles = [marble for marble in player.list_marble if marble.pos not in kennel_positions]
         if not marbles:
+            print("DEBUG: No marbles outside kennel, skipping action generation.")
             return
 
-        # Single move with 7
+        print(f"DEBUG: Marble positions: {[marble.pos for marble in marbles]}")
+
+        # Helper function for generate step combinations
+        def distribute_steps(remaining_steps, marble_positions):
+            """Distribute steps points among num_marbles"""
+            if remaining_steps == 0:
+                yield []
+            elif not marble_positions:
+                return
+            else:
+                for steps in range(remaining_steps + 1):
+                    for rest in distribute_steps(remaining_steps - steps, marble_positions[1:]):
+                        yield [steps] + rest
+
+        # Generate all combinations of 7 steps
+        print("DEBUG: Generating step distributions:")
+        for step_distribution in distribute_steps(7, marbles):
+            if sum(step_distribution) != 7:
+                print("DEBUG: Invalid step distribution (sum != 7), skipping.")
+                continue  # Ensure exactly 7 steps are distributed
+
+            # Generate corresponding actions
+            actions_for_distribution = []
+            valid = True
+
+            for marble, steps in zip(marbles, step_distribution):
+                if steps > 0:
+                    new_position = (marble.pos + steps) % track_length
+                    print(f"DEBUG: Marble at {marble.pos}, moving {steps} steps to {new_position}")
+                    action = Action(card=card, pos_from=marble.pos, pos_to=new_position)
+                    actions_for_distribution.append(action)
+
+                    # Check collisions for this move
+                    if not self.handle_collision(new_position, player):
+                        print(f"DEBUG: Collision detected for marble at {new_position}, distribution invalid.")
+                        valid = False
+                        break
+
+            if valid:
+                print("DEBUG: Valid step distribution, adding actions.")
+                actions.extend(actions_for_distribution)
+            else:
+                print("DEBUG: Step distribution invalid, skipping.")
+
+        # Single move
         for marble in marbles:
-            new_position = (marble.pos + 7) % len(Dog.BOARD["common_track"])
-            actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))
+            new_position = (marble.pos + 7) % track_length
+            print(f"DEBUG: Checking single move for marble at {marble.pos} -> {new_position}")
+            if self.handle_collision(new_position, player):
+                print(f"DEBUG: Single move valid, adding action.")
+                actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))
 
-        # Split move with 7
-        for marble1 in marbles:
-            for marble2 in marbles:
-                if marble1 == marble2:
-                    continue
-                for split1 in range(1,7):
-                    split2 = 7 - split1
-                    pos1 = (marble1.pos + split1) % len(Dog.BOARD["common_track"])
-                    pos2 = (marble2.pos + split2) % len(Dog.BOARD["common_track"])
-                    actions.append(Action(card=card, pos_from=marble1.pos, pos_to=pos1))
-                    actions.append(Action(card=card, pos_from=marble2.pos, pos_to=pos2))
+        print("DEBUG: Final actions generated:")
+        for action in actions:
+            print(f"  Action: {action.card.rank} from {action.pos_from} to {action.pos_to}")
 
+        print("DEBUG: Finished generation of actions for card 7.")
 
     def play_game(self):
         """Run the game automatically from start to finish."""
