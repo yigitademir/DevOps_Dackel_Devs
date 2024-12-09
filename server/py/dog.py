@@ -25,7 +25,6 @@ class Card(BaseModel):
         step_mapping = {'A': [1, 11], '2': [2], '3': [3], '4': [4, -4], '5': [5],
                         '6': [6], '8': [8], '9': [9], '10': [10], 'Q': [12], 'K': [13]}
         steps = step_mapping.get(self.rank, [])
-        print(f"DEBUG: Card {self.rank} allows steps: {steps}")
         return steps
 
 
@@ -430,7 +429,6 @@ class Dog(Game):
         # Determine valid positions based on steps.
         valid_steps = card.get_steps()  # Get the steps allowed for the card
         valid_positions = [(current_pos + step) % len(board["common_track"]) for step in valid_steps]
-        print(f"DEBUG: Valid positions for marble at {current_pos} with card {card.rank}: {valid_positions}")
 
         if card.rank == "7":
             return True
