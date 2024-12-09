@@ -247,6 +247,10 @@ class Dog(Game):
                 pos_to = start_position
                 actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
+        # Add Jack card actions to the action list
+        jack_actions = self.get_jack_actions(player)
+        actions.extend(jack_actions)
+        
         # Actions for marbles outside of kennel
         for marble in player.list_marble:
             if marble.pos not in Dog.BOARD["kennels"][self.state.idx_player_active]:  # Marble is outside the kennel
@@ -477,6 +481,41 @@ class Dog(Game):
             splits = [steps for steps in permutations(range(1, total_steps + 1), i) if sum(steps) == total_steps]
             step_splits.extend(splits)
         return step_splits
+    
+    def get_jack_actions(self, player: PlayerState) -> List[Action]:
+        """Generate a list of all possible actions when the player plays a Jack card."""
+        jack_actions = []
+        
+        # Ensure the player has a Jack card in hand
+        jack_cards = [card for card in player.list_card if card.rank == "J"]
+        if not jack_cards:
+            return jack_actions  # No Jack cards to play
+
+        # Iterate over the active player's marbles
+        for own_marble in player.list_marble:
+            if own_marble.is_save:
+                continue  # Skip marbles that are safe
+
+            # Iterate over all opponent marbles
+            for other_player in self.state.list_player:
+                if other_player == player:
+                    continue  # Skip the active player
+                
+                for other_marble in other_player.list_marble:
+                    if other_marble.is_save:
+                        continue  # Skip safe marbles
+                    
+                    # Create an exchange action
+                    for jack_card in jack_cards:
+                        action = Action(
+                            card=jack_card,
+                            pos_from=own_marble.pos,
+                            pos_to=other_marble.pos,
+                            card_swap=None
+                        )
+                        jack_actions.append(action)
+
+        return jack_actions
     
 # ---- GAMEPLAY METHODS----
 
