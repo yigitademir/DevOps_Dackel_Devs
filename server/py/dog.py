@@ -3,7 +3,7 @@ from typing import List, Optional, ClassVar
 from pydantic import BaseModel
 from enum import Enum
 import random
-
+from itertools import permutations
 
 class Card(BaseModel):
     suit: str  # card suit (color)
@@ -457,76 +457,13 @@ class Dog(Game):
         marble.pos = pos_to
         return True
 
-    def generate_seven_actions(self, actions: List[Action], player: PlayerState):
-        """Generate possible actions with card 7 (single move or split) In progress..... """
-        print("DEBUG: Starting generation of actions for card 7.")
-        card = Card(rank="7")
-        kennel_positions = card["kennels"][self.state.idx_player_active]
-        track_length = len(Dog.BOARD["common_track"])
-
-        # Filter marbles not in kennel
-        marbles = [marble for marble in player.list_marble if marble.pos not in kennel_positions]
-        if not marbles:
-            print("DEBUG: No marbles outside kennel, skipping action generation.")
-            return
-
-        print(f"DEBUG: Marble positions: {[marble.pos for marble in marbles]}")
-
-        # Helper function for generate step combinations
-        def distribute_steps(remaining_steps, marble_positions):
-            """Distribute steps points among num_marbles"""
-            if remaining_steps == 0:
-                yield []
-            elif not marble_positions:
-                return
-            else:
-                for steps in range(remaining_steps + 1):
-                    for rest in distribute_steps(remaining_steps - steps, marble_positions[1:]):
-                        yield [steps] + rest
-
-        # Generate all combinations of 7 steps
-        print("DEBUG: Generating step distributions:")
-        for step_distribution in distribute_steps(7, marbles):
-            if sum(step_distribution) != 7:
-                print("DEBUG: Invalid step distribution (sum != 7), skipping.")
-                continue  # Ensure exactly 7 steps are distributed
-
-            # Generate corresponding actions
-            actions_for_distribution = []
-            valid = True
-
-            for marble, steps in zip(marbles, step_distribution):
-                if steps > 0:
-                    new_position = (marble.pos + steps) % track_length
-                    print(f"DEBUG: Marble at {marble.pos}, moving {steps} steps to {new_position}")
-                    action = Action(card=card, pos_from=marble.pos, pos_to=new_position)
-                    actions_for_distribution.append(action)
-
-                    # Check collisions for this move
-                    if not self.handle_collision(new_position, player):
-                        print(f"DEBUG: Collision detected for marble at {new_position}, distribution invalid.")
-                        valid = False
-                        break
-
-            if valid:
-                print("DEBUG: Valid step distribution, adding actions.")
-                actions.extend(actions_for_distribution)
-            else:
-                print("DEBUG: Step distribution invalid, skipping.")
-
-        # Single move
-        for marble in marbles:
-            new_position = (marble.pos + 7) % track_length
-            print(f"DEBUG: Checking single move for marble at {marble.pos} -> {new_position}")
-            if self.handle_collision(new_position, player):
-                print(f"DEBUG: Single move valid, adding action.")
-                actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))
-
-        print("DEBUG: Final actions generated:")
-        for action in actions:
-            print(f"  Action: {action.card.rank} from {action.pos_from} to {action.pos_to}")
-
-        print("DEBUG: Finished generation of actions for card 7.")
+    def get_seven_step_combinations(self, total_steps = 7):
+        """Generate all possible step combinations for card '7' to split between marbles."""
+        step_splits = []
+        for i in range(1, total_steps + 1): # Generate combinations up to total_steps
+            splits = [steps for steps in permutations(range(1, total_steps + 1), i) if sum(steps) == total_steps]
+            step_splits.extend(splits)
+        return step_splits
 
     def play_game(self):
         """Run the game automatically from start to finish."""
