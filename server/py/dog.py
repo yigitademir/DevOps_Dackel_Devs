@@ -1,9 +1,9 @@
-from server.py.game import Game, Player
 from typing import List, Optional, ClassVar
-from pydantic import BaseModel
 from enum import Enum
 import random
 from itertools import permutations
+from pydantic import BaseModel
+from server.py.game import Game, Player
 
 class Card(BaseModel):
     suit: str  # card suit (color)
@@ -19,14 +19,13 @@ class Card(BaseModel):
 
     def __hash__(self):
         return hash((self.suit, self.rank))
-    
+
     def get_steps(self):
         # Map rank to allowed steps
         step_mapping = {'A': [1, 11], '2': [2], '3': [3], '4': [4, -4], '5': [5],
                         '6': [6], '8': [8], '9': [9], '10': [10], 'Q': [12], 'K': [13]}
         steps = step_mapping.get(self.rank, [])
         return steps
-
 
 class Marble(BaseModel):
     pos: int       # position on board (0 to 95)
@@ -38,7 +37,6 @@ class PlayerState(BaseModel):
     list_card: List[Card]      # list of cards
     list_marble: List[Marble]  # list of marbles
     team_id: int               # team_id
-
 
 class Action(BaseModel):
     card: Card                 # card to play
@@ -63,7 +61,6 @@ class GamePhase(str, Enum):
     SETUP = 'setup'            # before the game has started
     RUNNING = 'running'        # while the game is running
     FINISHED = 'finished'      # when the game is finished
-
 
 class GameState(BaseModel):
 
@@ -113,7 +110,6 @@ class GameState(BaseModel):
     list_card_draw: List[Card]         # list of cards to draw
     list_card_discard: List[Card]      # list of cards discarded
     card_active: Optional[Card]        # active card (for 7 and JKR with sequence of actions)
-
 
 class Dog(Game):
     BOARD = {
@@ -167,6 +163,7 @@ class Dog(Game):
             card_active = None,        # No active card at the start
             list_player = [],          # Will populate players below
         )
+
         # Create the players
         for i in range(4):  # 4 players
             team_id = i % 2 # Players 0 and 2 are team 0, 1 and 3 are team 1
@@ -211,6 +208,10 @@ class Dog(Game):
         print(f"list_card_discard: {len(self.state.list_card_discard)}")
         print(f"card_active: {self.state.card_active if self.state.card_active else None}")
 
+    def get_player_view(self, idx_player: int) -> GameState:
+        """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
+        pass
+
     def get_list_action(self) -> List[Action]:
         """ Get a list of possible actions for the active player.
             Return lists of actions available depending on how many
@@ -254,14 +255,12 @@ class Dog(Game):
                         # Loop through all possible moves for the card
                         for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
                             new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                            actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
-
-        # Function checks if actions are not overtaking a blocking marble
+                            actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position)) # Add valid action
 
         def filter_invalid_actions_save_marble(actions, state):
+            """Checks if actions are not overtaking a blocking marble."""
             filtered_actions = []
-            
-        
+
             for action in actions:
                 action_valid = True
 
@@ -275,11 +274,11 @@ class Dog(Game):
                         break
                 if action_valid:
                     filtered_actions.append(action)
-            
+
             return filtered_actions
-        
+
         actions = filter_invalid_actions_save_marble(actions, state)
-        
+
         validated_actions = set() # Using set for uniqueness
 
         # Validation of actions
@@ -341,66 +340,8 @@ class Dog(Game):
         if not self.state.list_card_draw:
             self.reshuffle_cards()
 
-    def exchange_marbles(self, current_player: PlayerState, action: Action) -> None:
-        """
-        Handle the marble exchange between the current player and an other player.
-        This is called when a Jack card is played.
-        """
-        # Ensure the action has valid positions for both marbles
-        if action.pos_from is None or action.pos_to is None:
-            print("Error: Invalid positions for marble exchange.")
-            return
+# ---- MARBLES METHODS----
 
-        # Find the player's marble to exchange
-        own_marble = next((m for m in current_player.list_marble if m.pos == action.pos_from), None)
-        if not own_marble:
-            print(f"Error: Own marble at position {action.pos_from} not found for exchange.")
-            return
-
-        # Find the opponent's marble to exchange with
-        other_player = next((p for p in self.state.list_player if p != current_player), None)
-        other_marble = next((m for m in other_player.list_marble if m.pos == action.pos_to), None)
-        if not other_marble:
-            print(f"Error: Opponent's marble at position {action.pos_to} not found for exchange.")
-            return
-        
-        # Swap positions of the two marbles
-        own_marble.pos, other_marble.pos = other_marble.pos, own_marble.pos
-
-        # Notify about the successful exchange
-        print(f"Marble exchange successful: {current_player.name}'s marble moved to position {own_marble.pos} "
-            f"and {other_player.name}'s marble moved to position {other_marble.pos}.")
-    
-    def get_player_view(self, idx_player: int) -> GameState:
-        """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
-        pass
-
-    def handle_collision(self, pos_to: int) -> bool:
-        """
-        Handle collisions when a marble moves to a new position.
-        If a marble is at the destination, it is sent back to its kennel.
-        Returns True if no collision or collision is handled, False if collision is not resolved.
-        """
-        board = Dog.BOARD
-        
-        # Check for collisions with other marbles
-        for other_player in self.state.list_player:
-            for other_marble in other_player.list_marble:
-                if other_marble.pos == pos_to:
-                    if other_marble.is_save:
-                        print(f"Impossible, marble at position {other_marble.pos} is safe.")
-                        return False
-                    else:
-                        # Send the marble back to the kennel
-                        empty_kennel_positions = [
-                            pos for pos in board["kennels"][self.state.list_player.index(other_player)]
-                            if all(m.pos != pos for m in other_player.list_marble)
-                        ]
-                        other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
-                        print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.")
-                        return True
-        return True
-    
     def move_marble(self, marble: Marble, card: Card, pos_to: int, player: PlayerState) -> bool:
         """
         Move marble to a new position and handle collisions.
@@ -454,6 +395,80 @@ class Dog(Game):
         # Move the marble
         marble.pos = pos_to
         return True
+    
+    def exchange_marbles(self, current_player: PlayerState, action: Action) -> None:
+        """
+        Handle the marble exchange between the current player and an other player.
+        This is called when a Jack card is played.
+        """
+        # Ensure the action has valid positions for both marbles
+        if action.pos_from is None or action.pos_to is None:
+            print("Error: Invalid positions for marble exchange.")
+            return
+
+        # Find the player's marble to exchange
+        own_marble = next((m for m in current_player.list_marble if m.pos == action.pos_from), None)
+        if not own_marble:
+            print(f"Error: Own marble at position {action.pos_from} not found for exchange.")
+            return
+
+        # Find the opponent's marble to exchange with
+        other_player = next((p for p in self.state.list_player if p != current_player), None)
+        other_marble = next((m for m in other_player.list_marble if m.pos == action.pos_to), None)
+        if not other_marble:
+            print(f"Error: Opponent's marble at position {action.pos_to} not found for exchange.")
+            return
+
+        # Swap positions of the two marbles
+        own_marble.pos, other_marble.pos = other_marble.pos, own_marble.pos
+
+        # Notify about the successful exchange
+        print(f"Marble exchange successful: {current_player.name}'s marble moved to position {own_marble.pos} "
+            f"and {other_player.name}'s marble moved to position {other_marble.pos}.")
+
+    def handle_collision(self, pos_to: int) -> bool:
+        """
+        Handle collisions when a marble moves to a new position.
+        If a marble is at the destination, it is sent back to its kennel.
+        Returns True if no collision or collision is handled, False if collision is not resolved.
+        """
+        board = Dog.BOARD
+
+        # Check for collisions with other marbles
+        for other_player in self.state.list_player:
+            for other_marble in other_player.list_marble:
+                if other_marble.pos == pos_to:
+                    if other_marble.is_save:
+                        print(f"Impossible, marble at position {other_marble.pos} is safe.")
+                        return False
+                    else:
+                        # Send the marble back to the kennel
+                        empty_kennel_positions = [
+                            pos for pos in board["kennels"][self.state.list_player.index(other_player)]
+                            if all(m.pos != pos for m in other_player.list_marble)
+                        ]
+                        other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
+                        print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.")
+                        return True
+        return True
+
+    def validate_no_overtaking_in_finish(self, action):
+        """Make sure the marbles cannot be overtaken in the finish"""
+        # The function returns true or false
+        player = self.state.list_player[self.state.idx_player_active]
+        finish_position = Dog.BOARD["finishes"][self.state.idx_player_active]
+
+        # Check if the action involves the finish area
+        if action.pos_from in finish_position or action.pos_to in finish_position:
+            # Ensure no marble in the finish area is overtaken or replaced
+            for marble in player.list_marble:
+                if marble.pos in finish_position and marble.pos >= action.pos_to:
+                    # A marble would be overtaken or replaced
+                    return False
+
+        return True # Action is valid, on overtaking in the finish
+    
+# ---- CARDS METHODS ----
 
     def get_seven_step_combinations(self, total_steps = 7):
         """Generate all possible step combinations for card '7' to split between marbles."""
@@ -462,12 +477,14 @@ class Dog(Game):
             splits = [steps for steps in permutations(range(1, total_steps + 1), i) if sum(steps) == total_steps]
             step_splits.extend(splits)
         return step_splits
+    
+# ---- GAMEPLAY METHODS----
 
     def play_game(self):
         """Run the game automatically from start to finish."""
         print("Game started!\nFirst round!")
 
-        while not self.state == GamePhase.FINISHED:
+        while self.state != GamePhase.FINISHED:
             self.apply_action(None)   # Play a single round
             self.check_game_end()   # Check if the game has ended
 
@@ -516,22 +533,6 @@ class Dog(Game):
             self.state.list_card_discard.clear()
             # Shuffle the draw pile
             random.shuffle(self.state.list_card_draw)
-
-    def validate_no_overtaking_in_finish(self, action):
-        """Make sure the marbles cannot be overtaken in the finish"""
-        # The function returns true or false
-        player = self.state.list_player[self.state.idx_player_active]
-        finish_position = Dog.BOARD["finishes"][self.state.idx_player_active]
-
-        # Check if the action involves the finish area
-        if action.pos_from in finish_position or action.pos_to in finish_position:
-            # Ensure no marble in the finish area is overtaken or replaced
-            for marble in player.list_marble:
-                if marble.pos in finish_position and marble.pos >= action.pos_to:
-                    # A marble would be overtaken or replaced
-                    return False
-
-        return True # Action is valid, on overtaking in the finish
 
 class RandomPlayer(Player):
 
