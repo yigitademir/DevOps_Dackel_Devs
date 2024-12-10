@@ -295,6 +295,7 @@ class Dog(Game):
         Apply the given action or handle the current player's turn if action is None.
         If no valid actions are available, the player's cards are discarded.
         """
+
         current_player = self.state.list_player[self.state.idx_player_active]
 
         if action is None:
@@ -336,9 +337,46 @@ class Dog(Game):
                     else:
                         print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
 
-        # Check if reshuffle is required before processing any actions. Test 50
-        if not self.state.list_card_draw and self.state.list_card_discard:
-            self.reshuffle_cards()
+            # If the action is swapping cards (e.g., with a Joker), handle it. Test 28
+            if action.card.rank == "JKR" and action.card_swap is not None:
+                # Check if the player has exactly two JOKER cards
+                jkr_cards = [card for card in current_player.list_card if card.rank == 'JKR']
+
+                if len(jkr_cards) == 2:
+                    # Remove one JOKER card and add the card to be swapped
+                    current_player.list_card.remove(jkr_cards[0])  # Remove one JOKER
+                    current_player.list_card.append(action.card_swap)  # Add the card to swap
+
+                    # Print for debugging
+                    print(f"Player {current_player.name} swapped a JOKER for {action.card_swap.rank}{action.card_swap.suit}.")
+
+                else:
+                    # Handle cases where the player doesn't have exactly two JOKER cards
+                    print("Player does not have exactly two JOKER cards.")
+
+            # Check if reshuffle is required before processing any actions. Test 50
+            #(doesn't work)
+            if not self.state.list_card_draw and self.state.list_card_discard:
+                self.reshuffle_cards()
+
+            # Support partner logic (doesn't work)
+            if action and hasattr(action, 'idx_player'):
+                idx_partner = (self.state.idx_player_active + 2) % self.state.cnt_player
+                partner = self.state.list_player[idx_partner]
+                if all(marble.pos >= self.CNT_STEPS for marble in current_player.list_marble):
+                    # Move the partner's unsaved marbles based on the current player's card
+                    for marble in partner.list_marble:
+                        if not marble.is_save:  # Only move unsaved marbles
+                            # Get the current card of the player
+                            card = current_player.list_card[0]  # Assuming the player is using their first card
+                            card_value = self.get_card_value(card)  # Get the value of the card
+                            pos_start = marble.pos
+                            pos_to = pos_start + card_value  # Move the marble based on the card value
+
+                            # Apply the action to move the partner's marble
+                            partner_marble_action = Action(card=card, pos_from=pos_start, pos_to=pos_to, idx_player=idx_partner)
+                            self.apply_action(partner_marble_action)  # Apply the action for the partner's marble
+                            break  # Only move one marble at a time
 
 # ---- MARBLES METHODS----
 
@@ -533,6 +571,32 @@ class Dog(Game):
             self.state.list_card_discard.clear()
             # Shuffle the draw pile
             random.shuffle(self.state.list_card_draw)
+
+    def support_partner_at_finish(self, current_player: PlayerState) -> None:
+        """
+        Handle the logic for supporting the partner once the current player's marbles are all at the finish line.
+        The current player can move their partner's unsaved marbles based on their card.
+        """
+
+        # Check if all the current player's marbles have reached the finish line
+        if all(marble.pos >= self.CNT_STEPS for marble in current_player.list_marble):
+            # Allow the current player to support their partner
+            idx_partner = (self.state.idx_player_active + 2) % self.state.cnt_player
+            partner = self.state.list_player[idx_partner]
+
+            # Move the partner's unsaved marbles based on the current player's card
+            for marble in partner.list_marble:
+                if not marble.is_save:  # Only move unsaved marbles
+                    # Get the current card of the player
+                    card = current_player.list_card[0]  # Assuming the player is using their first card
+                    card_value = self.get_card_value(card)  # Get the value of the card
+                    pos_start = marble.pos
+                    pos_to = pos_start + card_value  # Move the marble based on the card value
+
+                    # Apply the action to move the partner's marble
+                    partner_marble_action = Action(card=card, pos_from=pos_start, pos_to=pos_to, idx_player=idx_partner)
+                    self.apply_action(partner_marble_action)  # Apply the action for the partner's marble
+                    break  # Only move one marble at a time
 
 class RandomPlayer(Player):
 
