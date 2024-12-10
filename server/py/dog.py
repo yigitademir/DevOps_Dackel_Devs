@@ -256,10 +256,6 @@ class Dog(Game):
                     pos_to = start_position
                     actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
-        # Add Jack card actions to the action list
-        jack_actions = self.get_jack_actions(player)
-        actions.extend(jack_actions)
-
         # Actions for marbles outside of kennel
         for marble in player.list_marble:
             if marble.pos not in Dog.BOARD["kennels"][self.state.idx_player_active]:  # Marble is outside the kennel
@@ -271,11 +267,18 @@ class Dog(Game):
                             actions.append(
                                 Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
 
-        actions = self.filter_invalid_actions_save_marble(actions)
-
-        validated_actions = []
+        # Add Jack card actions to the action list
+        list_card_jack = [Card(suit='♣', rank='J'), Card(suit='♦', rank='J'), Card(suit='♥', rank='J'), Card(suit='♠', rank='J')]
+        if any(card in list_card_jack for card in player.list_card):
+            for card in player.list_card:
+                if card in list_card_jack:
+                    jack_actions = self.get_jack_actions(player, card)
+                    actions.extend(jack_actions)
 
         # Validation of actions
+        actions = self.filter_invalid_actions_save_marble(actions)
+        validated_actions = []
+
         for action in actions:
             if not self.is_duplicated_action(action, validated_actions):  # checking for duplicated actions
                 if self.validate_no_overtaking_in_finish(action):  # checking overtaking in finish
@@ -532,39 +535,24 @@ class Dog(Game):
             step_splits.extend(splits)
         return step_splits
 
-
-    def get_jack_actions(self, player: PlayerState) -> List[Action]:
+    def get_jack_actions(self, player, card) -> List[Action]:
         """Generate a list of all possible actions when the player plays a Jack card."""
         jack_actions = []
-
-        # Ensure the player has a Jack card in hand
-        jack_cards = [card for card in player.list_card if card.rank == "J"]
-        if not jack_cards:
-            return jack_actions  # No Jack cards to play
+        active_player = player
+        opponents = [player for player in self.state.list_player if player != active_player]
 
         # Iterate over the active player's marbles
-        for own_marble in player.list_marble:
-            if own_marble.is_save:
-                continue  # Skip marbles that are safe
-
-            # Iterate over all opponent marbles
-            for other_player in self.state.list_player:
-                if other_player == player:
-                    continue  # Skip the active player
-
-                for other_marble in other_player.list_marble:
-                    if other_marble.is_save:
-                        continue  # Skip safe marbles
-
-                    # Create an exchange action
-                    for jack_card in jack_cards:
-                        action = Action(
-                            card=jack_card,
-                            pos_from=own_marble.pos,
-                            pos_to=other_marble.pos,
-                            card_swap=None
-                        )
-                        jack_actions.append(action)
+        for marble in active_player.list_marble:
+            if marble.pos in Dog.BOARD["common track"]:  # Ensure the marble is on the common track
+                pos_from = marble.pos
+                # Iterate over all opponent marbles
+                for opponent in opponents:
+                    for opponent_marble in opponent.list_marble:
+                        if not opponent_marble.is_save:  # Opponent marble must not be safe
+                            pos_to = opponent_marble.pos
+                            # Add the swap action for both directions
+                            jack_actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to, card_swap=None))
+                            jack_actions.append(Action(card=card, pos_from=pos_to, pos_to=pos_from, card_swap=None))
 
         return jack_actions
 
