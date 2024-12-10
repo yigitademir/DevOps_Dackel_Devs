@@ -288,6 +288,10 @@ class Dog(Game):
 
         current_player = self.state.list_player[self.state.idx_player_active]
 
+        # Check if reshuffle is required before processing any actions. Test 50
+        if self.state.list_card_draw == []:
+            self.reshuffle_cards()
+
         if action is None:
             # Determine available actions
             actions = self.get_list_action()
@@ -344,11 +348,6 @@ class Dog(Game):
                     # Handle cases where the player doesn't have exactly two JOKER cards
                     print("Player does not have exactly two JOKER cards.")
 
-            # Check if reshuffle is required before processing any actions. Test 50
-            #(doesn't work)
-            if not self.state.list_card_draw and self.state.list_card_discard:
-                self.reshuffle_cards()
-
             # Support partner logic (doesn't work)
             if action and hasattr(action, 'idx_player'):
                 idx_partner = (self.state.idx_player_active + 2) % self.state.cnt_player
@@ -367,6 +366,9 @@ class Dog(Game):
                             partner_marble_action = Action(card=card, pos_from=pos_start, pos_to=pos_to, idx_player=idx_partner)
                             self.apply_action(partner_marble_action)  # Apply the action for the partner's marble
                             break  # Only move one marble at a time
+
+        # Adding used card to list_card_discard
+        # self.state.list_card_discard.extend(action.card)
 
 # ---- MARBLES METHODS----
 
@@ -574,13 +576,9 @@ class Dog(Game):
 
     def reshuffle_cards(self) -> None:
         """Reshuffle cards from the discard pile to the draw pile if needed. Test 50"""
-        if self.state.list_card_discard:
-            # Transfer all cards from discard to draw pile
-            self.state.list_card_draw.extend(self.state.list_card_discard)
-            # Clear the discard pile
-            self.state.list_card_discard.clear()
-            # Shuffle the draw pile
-            random.shuffle(self.state.list_card_draw)
+        self.state.list_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
+        # Clear the discard pile
+        self.state.list_card_discard.clear()
 
     def is_duplicated_action(self, action_to_check, validated_actions):
         for action in validated_actions:
