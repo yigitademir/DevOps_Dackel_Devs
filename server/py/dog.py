@@ -240,12 +240,21 @@ class Dog(Game):
 
             # Create a list of start cards (e.g., Ace, King, Joker)
             start_cards = [card for card in player.list_card if card.rank in ["A", "K", "JKR"]]
+            LIST_SUIT: List[str] = ['♠', '♥', '♦', '♣']
 
             # Check if player has start action or not and get corresponding action
             for card in start_cards:
-                pos_from = kennel_position[0]
-                pos_to = start_position
-                actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
+                if card.rank == "JKR" and card in player.list_card: # Joker actions
+                    pos_from = kennel_position[0]
+                    pos_to = start_position
+                    actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
+                    for suit in LIST_SUIT:
+                        actions.append(Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='A')))
+                        actions.append(Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='K')))
+                else:
+                    pos_from = kennel_position[0]
+                    pos_to = start_position
+                    actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
         # Actions for marbles outside of kennel
         for marble in player.list_marble:
@@ -255,20 +264,21 @@ class Dog(Game):
                         # Loop through all possible moves for the card
                         for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
                             new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                            actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position)) # Add valid action
+                            actions.append(
+                                Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
 
-        actions = self.filter_invalid_actions_save_marble(actions, state)
+        actions = self.filter_invalid_actions_save_marble(actions)
 
-        validated_actions = set() # Using set for uniqueness
+        validated_actions = []
 
         # Validation of actions
         for action in actions:
-            if action not in validated_actions: # checking for duplicated actions
-                if self.validate_no_overtaking_in_finish(action): # checking overtaking in finish
-                    validated_actions.add(action)
+            if not self.is_duplicated_action(action, validated_actions):  # checking for duplicated actions
+                if self.validate_no_overtaking_in_finish(action):  # checking overtaking in finish
+                    validated_actions.append(action)
                 # Further logic for additional game phases or card actions can go here...
 
-        return list(validated_actions) # Ensuring to return a list
+        return list(validated_actions)  # Ensuring to return a list
 
     def apply_action(self, action: Action) -> None:
         """
@@ -319,8 +329,6 @@ class Dog(Game):
         # Check if reshuffle is required before processing any actions. Test 50
         if not self.state.list_card_draw:
             self.reshuffle_cards()
-
-
 
 # ---- MARBLES METHODS----
 
@@ -450,14 +458,14 @@ class Dog(Game):
 
         return True # Action is valid, on overtaking in the finish
 
-    def filter_invalid_actions_save_marble(actions, state):
+    def filter_invalid_actions_save_marble(self, actions):
         """Checks if actions are not overtaking a blocking marble."""
         filtered_actions = []
 
         for action in actions:
             action_valid = True
 
-            for player in state.list_player:
+            for player in self.state.list_player:
                 for marble in player.list_marble:
                     if marble.is_save:
                         if action.pos_from < marble.pos <= action.pos_to:
@@ -535,6 +543,15 @@ class Dog(Game):
             self.state.list_card_discard.clear()
             # Shuffle the draw pile
             random.shuffle(self.state.list_card_draw)
+
+    def is_duplicated_action(self, action_to_check, validated_actions):
+        for action in validated_actions:
+            if (action.card == action_to_check.card and
+                    action.pos_to == action_to_check.pos_to and
+                    action.pos_from == action.pos_from and
+                    action.card_swap == action_to_check.card_swap):
+                return True
+            return False
 
 class RandomPlayer(Player):
 
