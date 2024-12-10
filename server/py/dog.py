@@ -337,7 +337,7 @@ class Dog(Game):
                         print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
 
         # Check if reshuffle is required before processing any actions. Test 50
-        if not self.state.list_card_draw:
+        if not self.state.list_card_draw and self.state.list_card_discard:
             self.reshuffle_cards()
 
 # ---- MARBLES METHODS----
