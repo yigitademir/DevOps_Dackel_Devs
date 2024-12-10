@@ -257,27 +257,7 @@ class Dog(Game):
                             new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
                             actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position)) # Add valid action
 
-        def filter_invalid_actions_save_marble(actions, state):
-            """Checks if actions are not overtaking a blocking marble."""
-            filtered_actions = []
-
-            for action in actions:
-                action_valid = True
-
-                for player in state.list_player:
-                    for marble in player.list_marble:
-                        if marble.is_save:
-                            if action.pos_from < marble.pos <= action.pos_to:
-                                action_valid = False
-                                break
-                    if not action_valid:
-                        break
-                if action_valid:
-                    filtered_actions.append(action)
-
-            return filtered_actions
-
-        actions = filter_invalid_actions_save_marble(actions, state)
+        actions = self.filter_invalid_actions_save_marble(actions, state)
 
         validated_actions = set() # Using set for uniqueness
 
@@ -339,6 +319,8 @@ class Dog(Game):
         # Check if reshuffle is required before processing any actions. Test 50
         if not self.state.list_card_draw:
             self.reshuffle_cards()
+
+
 
 # ---- MARBLES METHODS----
 
@@ -467,6 +449,26 @@ class Dog(Game):
                     return False
 
         return True # Action is valid, on overtaking in the finish
+
+    def filter_invalid_actions_save_marble(actions, state):
+        """Checks if actions are not overtaking a blocking marble."""
+        filtered_actions = []
+
+        for action in actions:
+            action_valid = True
+
+            for player in state.list_player:
+                for marble in player.list_marble:
+                    if marble.is_save:
+                        if action.pos_from < marble.pos <= action.pos_to:
+                            action_valid = False
+                            break
+                if not action_valid:
+                    break
+            if action_valid:
+                filtered_actions.append(action)
+
+        return filtered_actions
     
 # ---- CARDS METHODS ----
 
@@ -477,7 +479,7 @@ class Dog(Game):
             splits = [steps for steps in permutations(range(1, total_steps + 1), i) if sum(steps) == total_steps]
             step_splits.extend(splits)
         return step_splits
-    
+
 # ---- GAMEPLAY METHODS----
 
     def play_game(self):
