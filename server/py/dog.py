@@ -536,16 +536,33 @@ class Dog(Game):
         actions = []
         idx_active_player = self.state.idx_player_active
         opponents = [0, 1, 2, 3]
-        opponents.remove(idx_active_player) # Remove active player from opponents
+        opponents.remove(idx_active_player) # Remove active player from
 
-        # Takes current position of a marble
+        # Track if any opponent marbles are eligible for swapping
+        opponent_swaps_found = False
+
+        # Ensure the marble is not in the finish
         if marble.pos not in Dog.BOARD["finishes"][idx_active_player]:  # Ensure the marble is on the common track
             pos_from = marble.pos
+
             # Iterate over all opponent marbles
             for opponent in opponents:
                 for opponent_marble in self.state.list_player[opponent].list_marble:
                     if not opponent_marble.is_save:  # Opponent marble must not be safe
+                        opponent_swaps_found = True
                         pos_to = opponent_marble.pos
+                        # Add the swap action for both directions
+                        actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to, card_swap=None))
+                        actions.append(Action(card=card, pos_from=pos_to, pos_to=pos_from, card_swap=None))
+
+            # If no opponent swaps are available, swap within the player's own marbles
+            if not opponent_swaps_found:
+                print("No opponent marbles available for swapping. Swapping own marbles.")
+                active_player_marbles = [m for m in self.state.list_player[idx_active_player].list_marble if m != marble]
+                for other_marble in active_player_marbles:
+                    if other_marble.pos not in Dog.BOARD["kennels"][
+                        idx_active_player]:  # Ensure it's not in the kennel
+                        pos_to = other_marble.pos
                         # Add the swap action for both directions
                         actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to, card_swap=None))
                         actions.append(Action(card=card, pos_from=pos_to, pos_to=pos_from, card_swap=None))
