@@ -226,11 +226,8 @@ class Dog(Game):
         list_suit: List[str] = ['♠', '♥', '♦', '♣']
 
         if not self.state.bool_card_exchanged:
-            seen_cards = set()
-            for card in player.list_card:
-                if card not in seen_cards:  # Avoid adding duplicate cards
+            for card in set(player.list_card):    # Avoid adding duplicate cards
                     actions.append(Action(card=card, pos_from=None, pos_to=None))
-                    seen_cards.add(card)
             return actions
 
         if self.state.bool_card_exchanged:
@@ -497,8 +494,18 @@ class Dog(Game):
 
             for player in self.state.list_player:
                 for marble in player.list_marble:
-                    if marble.is_save:
+                    if marble.is_save and marble.pos != 0:
                         if action.pos_from < marble.pos <= action.pos_to:
+                            action_valid = False
+                            break
+                        elif action.pos_from > marble.pos >= action.pos_to: #if going backwards
+                            action_valid = False
+                            break
+                    elif marble.is_save and marble.pos == 0:
+                        if action.pos_from > marble.pos >= action.pos_to:
+                            action_valid = False
+                            break
+                        elif action.pos_from < marble.pos <= action.pos_to: #if going backwards
                             action_valid = False
                             break
                 if not action_valid:
