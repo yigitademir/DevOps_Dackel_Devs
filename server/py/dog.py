@@ -222,6 +222,7 @@ class Dog(Game):
         start_position = Dog.BOARD["starts"][self.state.idx_player_active]
         kennel_position = Dog.BOARD["kennels"][self.state.idx_player_active]
         state = self.get_state()
+        LIST_SUIT: List[str] = ['♠', '♥', '♦', '♣']
 
         if not self.state.bool_card_exchanged:
             seen_cards = set()
@@ -240,7 +241,6 @@ class Dog(Game):
 
             # Create a list of start cards (e.g., Ace, King, Joker)
             start_cards = [card for card in player.list_card if card.rank in ["A", "K", "JKR"]]
-            LIST_SUIT: List[str] = ['♠', '♥', '♦', '♣']
 
             # Check if player has start action or not and get corresponding action
             for card in start_cards:
@@ -261,15 +261,18 @@ class Dog(Game):
             if marble.pos not in Dog.BOARD["kennels"][self.state.idx_player_active]:  # Marble is outside the kennel
                 for card in player.list_card:
                     if card.rank in Dog.RANK_ACTIONS:  # Ensure the card rank is valid
-                        if Dog.RANK_ACTIONS.get(card.rank, {}).get("exchange", False): # checking for exchange attribute
+                        if card.rank == "JKR" and card in player.list_card: # Joker actions
+                            for suit in LIST_SUIT:
+                                joker_actions = self.get_joker_actions_later_in_game(card, suit)
+                                actions.extend(joker_actions)
+                        if Dog.RANK_ACTIONS.get(card.rank, {}).get("exchange", False): # checking for exchange attribute Jack
                             jack_actions = self.get_jack_actions(marble, card)
                             actions.extend(jack_actions)
-                        else:
-                            # Loop through all possible moves for the card
-                            for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
-                                new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                                actions.append(
-                                    Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+
+                        # Loop through all possible moves for the card
+                        for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
+                            new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
+                            actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
 
         # Validation of actions
         actions = self.filter_invalid_actions_save_marble(actions)
@@ -530,6 +533,25 @@ class Dog(Game):
             splits = [steps for steps in permutations(range(1, total_steps + 1), i) if sum(steps) == total_steps]
             step_splits.extend(splits)
         return step_splits
+
+    def get_joker_actions_later_in_game(self, card, suit):
+        joker_actions = []
+
+        joker_actions.extend([Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='2')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='3')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='4')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='5')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='6')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='7')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='8')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='9')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='10')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='A')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='J')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='K')),
+                        Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='Q')),
+                        ])
+        return joker_actions
 
     def get_jack_actions(self, marble, card) -> List[Action]:
         """Generate a list of all possible actions when the player plays a Jack card."""
