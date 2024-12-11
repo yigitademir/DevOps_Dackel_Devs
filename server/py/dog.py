@@ -334,7 +334,7 @@ class Dog(Game):
                     else:
                         print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
 
-            # If the action is swapping cards (e.g., with a Joker), handle it. Test 28
+            # If the action is swapping cards (e.g., with a Joker), handle it. Test 28git pull
             if action.card.rank == "JKR" and action.card_swap is not None:
                 # Check if the player has exactly two JOKER cards
                 jkr_cards = [card for card in current_player.list_card if card.rank == 'JKR']
