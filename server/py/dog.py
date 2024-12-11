@@ -274,7 +274,7 @@ class Dog(Game):
         for marble in marbles_to_process:
             if not marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active]:  # Marble is outside the kennel
                 for card in player.list_card:
-                    if card.rank in Dog.RANK_ACTIONS:  # Ensure the card rank is valid
+                    # if card.rank in Dog.RANK_ACTIONS:  # Ensure the card rank is valid
                         if card.rank == "JKR" and card in player.list_card: # Joker actions
                             for suit in list_suit:
                                 joker_actions = self.get_joker_actions_later_in_game(card, suit)
@@ -309,26 +309,11 @@ class Dog(Game):
 
         current_player = self.state.list_player[self.state.idx_player_active]
 
-        # Check if reshuffle is required before processing any actions. Test 50
-        if not self.state.list_card_draw:
-            self.reshuffle_cards()
-
         if action is None:
-            # Determine available actions
-            actions = self.get_list_action()
-
-            if actions:
-                # Select and apply an action (AI or user input)
-                random_player = RandomPlayer()  # Instantiate the RandomPlayer object
-                action = random_player.select_action(self.state, actions)
-                self.apply_action(action)
-                print(f"{current_player.name} played {action.card.rank}{action.card.suit}.")
-            else:
-                # No valid actions, discard all cards
-                self.state.list_card_discard.extend(current_player.list_card)
-                # discarded_cards = current_player.list_card.copy()
-                current_player.list_card.clear()
-                print(f"{current_player.name} has no valid actions and discards all cards.")
+            # No valid actions, discard all cards
+            self.state.list_card_discard.extend(current_player.list_card)
+            # discarded_cards = current_player.list_card.copy()
+            current_player.list_card.clear()
 
             # Move to the next player
             self.state.idx_player_active = (self.state.idx_player_active + 1) % self.state.cnt_player
@@ -628,18 +613,23 @@ class Dog(Game):
 
     def deal_cards_to_players(self):
         """Deal new cards to players at the start of a new round."""
+        if not self.state.list_card_draw:
+            # Clear the discard pile
+            self.state.list_card_discard.clear()
+            # Create new deck of cards
+            self.state.list_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
         cards_to_deal = [5, 4, 3, 2, 6][(self.state.cnt_round - 2) % 5]  # Calculate number of cards for distribution
         for player in self.state.list_player:
-            while len(player.list_card) < cards_to_deal and self.state.list_card_draw:
+            while len(player.list_card) < cards_to_deal:
                 player.list_card.append(self.state.list_card_draw.pop())
 
         print(f"Starting Round {self.state.cnt_round}")
 
-    def reshuffle_cards(self) -> None:
-        """Reshuffle cards from the discard pile to the draw pile if needed. Test 50"""
-        self.state.list_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
-        # Clear the discard pile
-        self.state.list_card_discard.clear()
+    # def reshuffle_cards(self) -> None:
+    #     """Reshuffle cards from the discard pile to the draw pile if needed. Test 50"""
+    #     self.state.list_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
+    #     # Clear the discard pile
+    #     self.state.list_card_discard.clear()
 
     @staticmethod
     def is_duplicated_action(action_to_check, validated_actions):
