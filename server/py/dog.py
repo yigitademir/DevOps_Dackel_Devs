@@ -233,73 +233,74 @@ class Dog(Game):
                     seen_cards.add(card)
             return actions
 
-        # Checking if all marbles in the finish to help partner
-        if all(marble.pos in finish_position for marble in player.list_marble):
-            teammate_index = (self.state.idx_player_active + 2) % 4
-            teammate = self.state.list_player[teammate_index]
+        if self.state.bool_card_exchanged:
+            # Checking if all marbles in the finish to help partner
+            if all(marble.pos in finish_position for marble in player.list_marble):
+                teammate_index = (self.state.idx_player_active + 2) % 4
+                teammate = self.state.list_player[teammate_index]
 
-            # Temporarily override the marbles to iterate over teammate's marbles
-            marbles_to_process = teammate.list_marble
-            print(f"Processing teammate marbles because all player marbles are in finish.")
-        else:
-            # Process the player's own marbles
-            marbles_to_process = player.list_marble
-            print(f"Processing player marbles.")
+                # Temporarily override the marbles to iterate over teammate's marbles
+                marbles_to_process = teammate.list_marble
+                print(f"Processing teammate marbles because all player marbles are in finish.")
+            else:
+                # Process the player's own marbles
+                marbles_to_process = player.list_marble
+                print(f"Processing player marbles.")
 
-        # Game start: Checking if any marbles are in the kennel
-        if any(marble.pos in kennel_position for marble in marbles_to_process):
+            # Game start: Checking if any marbles are in the kennel
+            if any(marble.pos in kennel_position for marble in marbles_to_process):
 
-            # Check for self-block on start position
-            if any(marble.pos == start_position and marble.is_save for marble in marbles_to_process):
-                return actions
+                # Check for self-block on start position
+                if any(marble.pos == start_position and marble.is_save for marble in marbles_to_process):
+                    return actions
 
-            # Create a list of start cards (e.g., Ace, King, Joker)
-            start_cards = [card for card in player.list_card if card.rank in ["A", "K", "JKR"]]
+                # Create a list of start cards (e.g., Ace, King, Joker)
+                start_cards = [card for card in player.list_card if card.rank in ["A", "K", "JKR"]]
 
-            # Check if player has start action or not and get corresponding action
-            for card in start_cards:
-                if card.rank == "JKR" and card in player.list_card: # Joker actions
-                    pos_from = kennel_position[0]
-                    pos_to = start_position
-                    actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
-                    for suit in list_suit:
-                        actions.append(Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='A')))
-                        actions.append(Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='K')))
-                else:
-                    pos_from = kennel_position[0]
-                    pos_to = start_position
-                    actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
+                # Check if player has start action or not and get corresponding action
+                for card in start_cards:
+                    if card.rank == "JKR" and card in player.list_card: # Joker actions
+                        pos_from = kennel_position[0]
+                        pos_to = start_position
+                        actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
+                        for suit in list_suit:
+                            actions.append(Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='A')))
+                            actions.append(Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='K')))
+                    else:
+                        pos_from = kennel_position[0]
+                        pos_to = start_position
+                        actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
-        # Actions for marbles outside of kennel
-        for marble in marbles_to_process:
-            if not marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active]:  # Marble is outside the kennel
-                for card in player.list_card:
-                    # if card.rank in Dog.RANK_ACTIONS:  # Ensure the card rank is valid
-                        if card.rank == "JKR" and card in player.list_card: # Joker actions
-                            for suit in list_suit:
-                                joker_actions = self.get_joker_actions_later_in_game(card, suit)
-                                actions.extend(joker_actions)
+            # Actions for marbles outside of kennel
+            for marble in marbles_to_process:
+                if not marble.pos in Dog.BOARD["kennels"][self.state.idx_player_active]:  # Marble is outside the kennel
+                    for card in player.list_card:
+                        # if card.rank in Dog.RANK_ACTIONS:  # Ensure the card rank is valid
+                            if card.rank == "JKR" and card in player.list_card: # Joker actions
+                                for suit in list_suit:
+                                    joker_actions = self.get_joker_actions_later_in_game(card, suit)
+                                    actions.extend(joker_actions)
 
-                        if Dog.RANK_ACTIONS.get(card.rank, {}).get("exchange", False): # checking for exchange attribute Jack
-                            jack_actions = self.get_jack_actions(marble, card)
-                            actions.extend(jack_actions)
+                            if Dog.RANK_ACTIONS.get(card.rank, {}).get("exchange", False): # checking for exchange attribute Jack
+                                jack_actions = self.get_jack_actions(marble, card)
+                                actions.extend(jack_actions)
 
-                        # Loop through all possible moves for the card
-                        for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
-                            new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                            actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+                            # Loop through all possible moves for the card
+                            for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
+                                new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
+                                actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
 
-        # Validation of actions
-        actions = self.filter_invalid_actions_save_marble(actions)
-        validated_actions = []
+            # Validation of actions
+            actions = self.filter_invalid_actions_save_marble(actions)
+            validated_actions = []
 
-        for action in actions:
-            if not self.is_duplicated_action(action, validated_actions):  # checking for duplicated actions
-                if self.validate_no_overtaking_in_finish(action):  # checking overtaking in finish
-                    validated_actions.append(action)
-                # Further logic for additional game phases or card actions can go here...
+            for action in actions:
+                if not self.is_duplicated_action(action, validated_actions):  # checking for duplicated actions
+                    if self.validate_no_overtaking_in_finish(action):  # checking overtaking in finish
+                        validated_actions.append(action)
+                    # Further logic for additional game phases or card actions can go here...
 
-        return list(validated_actions)  # Ensuring to return a list
+            return list(validated_actions)  # Ensuring to return a list
 
     def apply_action(self, action: Action) -> None:
         """
