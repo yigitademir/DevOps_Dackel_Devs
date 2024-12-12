@@ -226,25 +226,24 @@ class Dog(Game):
         list_suit: List[str] = ['♠', '♥', '♦', '♣']
 
         if not self.state.bool_card_exchanged:
-            seen_cards = set()
-            for card in player.list_card:
-                if card not in seen_cards:  # Avoid adding duplicate cards
+            for card in set(player.list_card):    # Avoid adding duplicate cards
                     actions.append(Action(card=card, pos_from=None, pos_to=None))
                     seen_cards.add(card)
             return actions
 
-        # Checking if all marbles in the finish to help partner
-        if all(marble.pos in finish_position for marble in player.list_marble):
-            teammate_index = (self.state.idx_player_active + 2) % 4
-            teammate = self.state.list_player[teammate_index]
+        if self.state.bool_card_exchanged:
+            # Checking if all marbles in the finish to help partner
+            if all(marble.pos in finish_position for marble in player.list_marble):
+                teammate_index = (self.state.idx_player_active + 2) % 4
+                teammate = self.state.list_player[teammate_index]
 
-            # Temporarily override the marbles to iterate over teammate's marbles
-            marbles_to_process = teammate.list_marble
-            print(f"Processing teammate marbles because all player marbles are in finish.")
-        else:
-            # Process the player's own marbles
-            marbles_to_process = player.list_marble
-            print(f"Processing player marbles.")
+                # Temporarily override the marbles to iterate over teammate's marbles
+                marbles_to_process = teammate.list_marble
+                print(f"Processing teammate marbles because all player marbles are in finish.")
+            else:
+                # Process the player's own marbles
+                marbles_to_process = player.list_marble
+                print(f"Processing player marbles.")
 
         # Game start: Checking if any marbles are in the kennel
         for _ in [0]: # dummy loop to handle exit when start position is blocked
@@ -287,22 +286,22 @@ class Dog(Game):
                             jack_actions = self.get_jack_actions(marble, card)
                             actions.extend(jack_actions)
 
-                        # Loop through all possible moves for the card
-                        for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
-                            new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                            actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+                            # Loop through all possible moves for the card
+                            for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
+                                new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
+                                actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
 
-        # Validation of actions
-        actions = self.filter_invalid_actions_save_marble(actions)
-        validated_actions = []
+            # Validation of actions
+            actions = self.filter_invalid_actions_save_marble(actions)
+            validated_actions = []
 
-        for action in actions:
-            if not self.is_duplicated_action(action, validated_actions):  # checking for duplicated actions
-                if self.validate_no_overtaking_in_finish(action):  # checking overtaking in finish
-                    validated_actions.append(action)
-                # Further logic for additional game phases or card actions can go here...
+            for action in actions:
+                if not self.is_duplicated_action(action, validated_actions):  # checking for duplicated actions
+                    if self.validate_no_overtaking_in_finish(action):  # checking overtaking in finish
+                        validated_actions.append(action)
+                    # Further logic for additional game phases or card actions can go here...
 
-        return list(validated_actions)  # Ensuring to return a list
+            return list(validated_actions)  # Ensuring to return a list
 
     def apply_action(self, action: Action) -> None:
         """
