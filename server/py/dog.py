@@ -226,7 +226,9 @@ class Dog(Game):
         list_suit: List[str] = ['♠', '♥', '♦', '♣']
 
         if not self.state.bool_card_exchanged:
-            for card in set(player.list_card):    # Avoid adding duplicate cards
+            seen_cards = set()
+            for card in player.list_card:
+                if card not in seen_cards:  # Avoid adding duplicate cards
                     actions.append(Action(card=card, pos_from=None, pos_to=None))
                     seen_cards.add(card)
             return actions
