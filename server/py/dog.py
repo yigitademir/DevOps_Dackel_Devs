@@ -278,7 +278,7 @@ class Dog(Game):
                 if not marble.pos in Dog.BOARD["kennels"][index_to_process]:  # Marble is outside the kennel
                     for card in player.list_card:
                         if card.rank in Dog.RANK_ACTIONS:  # Ensure the card rank is valid
-                            if card.rank == "JKR" and card in player.list_card: # Joker actions
+                            if card.rank == "JKR": # Joker actions
                                 for suit in list_suit:
                                     joker_actions = self.get_joker_actions_later_in_game(card, suit)
                                     actions.extend(joker_actions)
@@ -501,7 +501,7 @@ class Dog(Game):
             for player in self.state.list_player:
                 for marble in player.list_marble:
                     if marble.is_save:
-                        if action.pos_from < marble.pos <= action.pos_to:
+                        if action.pos_from is not None and action.pos_to is not None and action.pos_from < marble.pos <= action.pos_to:
                             action_valid = False
                             break
                 if not action_valid:
@@ -631,11 +631,15 @@ class Dog(Game):
     @staticmethod
     def is_duplicated_action(action_to_check, validated_actions):
         for action in validated_actions:
-            if (action.card == action_to_check.card and
-                    action.pos_to == action_to_check.pos_to and
-                    action.pos_from == action.pos_from and
-                    action.card_swap == action_to_check.card_swap):
-                return True
+            conditions_to_meet = (action.card.rank == action_to_check.card.rank and
+                                action.card.suit == action_to_check.card.suit and
+                                action.pos_to == action_to_check.pos_to and
+                                action.pos_from == action_to_check.pos_from)
+
+            if conditions_to_meet:
+                if action.card_swap is None or (action.card_swap.rank == action_to_check.card_swap.rank and
+                                                    action.card_swap.suit == action_to_check.card_swap.suit):
+                    return True
             return False
 
 class RandomPlayer(Player):
