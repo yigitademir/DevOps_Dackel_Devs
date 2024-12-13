@@ -245,7 +245,6 @@ class Dog(Game):
                 index_to_process = self.state.idx_player_active
                 # Process the player's own marbles
                 marbles_to_process = player.list_marble
-                print(f"Processing player marbles.")
 
             # Game start: Checking if any marbles are in the kennel
             for _ in [0]: # dummy loop to handle exit when start position is blocked
