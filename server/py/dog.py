@@ -1,7 +1,7 @@
 from typing import List, Optional, ClassVar
 from enum import Enum
 import random
-from itertools import permutations
+from itertools import combinations_with_replacement, permutations
 from pydantic import BaseModel
 from server.py.game import Game, Player
 
@@ -513,13 +513,24 @@ class Dog(Game):
 
 # ---- CARDS METHODS ----
     @staticmethod
-    def get_seven_step_combinations(total_steps = 7):
+    def get_seven_actions(total_steps):
         """Generate all possible step combinations for card '7' to split between marbles."""
-        step_splits = []
-        for i in range(1, total_steps + 1): # Generate combinations up to total_steps
-            splits = [steps for steps in permutations(range(1, total_steps + 1), i) if sum(steps) == total_steps]
-            step_splits.extend(splits)
-        return step_splits
+        def find_partitions(n, max_part):
+            """Helper function to recursively find partitions of n"""
+            if n == 0:
+                yield []
+            for i in range(1, min(n, max_part) + 1):
+                for subpartition in find_partitions(n-i, i):
+                    yield [i] + subpartition
+
+        # Generate all unique partitions of total steps.
+        partitions = list(find_partitions(total_steps, 7))
+
+        # For each partition, create all permutations to represent different move orders
+        all_moves = set()
+        for partition in partitions:
+            all_moves.update(permutations(partition))
+        return sorted(all_moves)
 
     @staticmethod
     def get_joker_actions_later_in_game(card, suit):
