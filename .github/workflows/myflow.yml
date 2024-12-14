@@ -1,0 +1,21 @@
+name: Deploy Dog
+on:
+    push:
+      branches: 'main'
+jobs:
+    deploy-job:
+      runs-on: ubuntu-latest
+      permissions:
+        contents: 'read'
+        id-token: 'write'
+      steps:
+        - name: Get code
+          uses: actions/checkout@v4.2.2
+        - name: Authenticate Google Cloud
+          uses: google-github-actions/auth@v2
+          with:
+            service_account: 1026231733241-compute@developer.gserviceaccount.com
+            project_id: devops-team-13-171401
+            workload_identity_provider: projects/1026231733241/locations/global/workloadIdentityPools/github/providers/my-repo
+        - name: Deploy
+          run: echo "Deploying on Google Cloud..."
