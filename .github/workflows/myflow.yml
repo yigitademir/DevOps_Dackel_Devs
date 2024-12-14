@@ -27,7 +27,7 @@ jobs:
         - name: Deploy to Cloud Run
           run: |
             gcloud run deploy game-server-service-from-command-line \
-              --image=europe-west6-docker.pkg.dev/devops-team-13-171401/cloud-run-source-deploy/devops_server_image \
+              --image=europe-west6-docker.pkg.dev/devops-team-13-171401/cloud-run-source-deploy/game-server-service-from-command-line:latest \
               --platform=managed \
               --region=europe-west6 \
               --allow-unauthenticated
