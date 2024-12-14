@@ -9,11 +9,30 @@ jobs:
       steps:
         - name: Get code
           uses: actions/checkout@v4.2.2
+        
         - name: Authenticate Google Cloud
           uses: google-github-actions/auth@v2
           with:
             service_account: 1026231733241-compute@developer.gserviceaccount.com
             project_id: devops-team-13-171401
             workload_identity_provider: projects/1026231733241/locations/global/workloadIdentityPools/github/providers/my-repo
-        - name: Deploy
-          run: echo "Deploying on Google Cloud..."
+        
+        - name: Setup gcloud CLI
+          uses: google-github-actions/setup-gcloud@v2
+          with:
+            project_id: devops-team-13-171401
+        
+        - name: Build and Push Docker Image
+          uses: docker/build-push-action@v4
+          with:
+            push: true
+            tags: gcr.io/devops-team-13-171401/devops_server_image:latest
+
+        - name: Deploy to Cloud Run
+          run: |
+            gcloud run deploy game-server-service-from-command-line \
+            --image=gcr.io/devops-team-13-171401/devops_server_image:latest \
+            --region=us-central1 \
+            --platform=managed \
+            --allow-unauthenticated
+            
