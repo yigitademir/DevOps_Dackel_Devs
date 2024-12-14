@@ -26,12 +26,12 @@ jobs:
           uses: docker/build-push-action@v4
           with:
             push: true
-            tags: gcr.io/devops-team-13-171401/devops_server_image:latest
+            tags: europe-west6-docker.pkg.dev/devops-team-13-171401/cloud-run-source-deploy/devops_server_image:latest
 
         - name: Deploy to Cloud Run
           run: |
             gcloud run deploy game-server-service-from-command-line \
-            --image=gcr.io/devops-team-13-171401/devops_server_image:latest \
+            --image=europe-west6-docker.pkg.dev/devops-team-13-171401/cloud-run-source-deploy/devops_server_image:latest \
             --region=us-central1 \
             --platform=managed \
             --allow-unauthenticated
