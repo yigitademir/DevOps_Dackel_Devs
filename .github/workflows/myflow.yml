@@ -17,22 +17,27 @@ jobs:
             project_id: devops-team-13-171401
             workload_identity_provider: projects/1026231733241/locations/global/workloadIdentityPools/github/providers/my-repo
         
-        - name: Setup gcloud CLI
+        # Step 3: Install Google Cloud SDK
+        - name: Set up Cloud SDK
           uses: google-github-actions/setup-gcloud@v2
           with:
             project_id: devops-team-13-171401
         
-        - name: Build and Push Docker Image
-          uses: docker/build-push-action@v4
-          with:
-            push: true
-            tags: europe-west6-docker.pkg.dev/devops-team-13-171401/cloud-run-source-deploy/game-server-service-from-command-line:latest
-
+        # Step 4: Deploy the Docker image to Cloud Run
         - name: Deploy to Cloud Run
           run: |
             gcloud run deploy game-server-service-from-command-line \
-            --image=europe-west6-docker.pkg.dev/devops-team-13-171401/cloud-run-source-deploy/devops_server_image:latest \
-            --region=europe-west6 \
-            --platform=managed \
-            --allow-unauthenticated
+              --image=gcr.io/devops-team-13-171401/devops_server_image \
+              --platform=managed \
+              --region=europe-west6 \
+              --allow-unauthenticated
+
+        # Step 5: Get and print the service URL
+        - name: Get service URL
+          run: |
+            SERVICE_URL=$(gcloud run services describe game-server-service-from-command-line \
+              --platform=managed \
+              --region=europe-west6 \
+              --format='value(status.url)')
+            echo "Service is running at: $SERVICE_URL"        
             
