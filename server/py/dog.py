@@ -3,7 +3,7 @@ from enum import Enum
 import random
 from itertools import combinations_with_replacement, permutations
 from pydantic import BaseModel
-from server.py.game import Game, Player
+from game import Game, Player
 
 class Card(BaseModel):
     suit: str  # card suit (color)
@@ -643,15 +643,25 @@ class Dog(Game):
 
     def deal_cards_to_players(self):
         """Deal new cards to players at the start of a new round."""
-        if not self.state.list_card_draw:
-            # Clear the discard pile
+        # Calculate the number of cards to deal to each player
+        cards_to_deal = [5, 4, 3, 2, 6][(self.state.cnt_round - 2) % 5]
+        total_cards_needed = cards_to_deal * self.state.cnt_player  # 4 players
+
+        # Check if there are enough cards in the draw pile
+        if len(self.state.list_card_draw) < total_cards_needed:
+            # Not enough cards, shuffle the discard pile into the draw pile
+            self.state.list_card_draw.extend(self.state.list_card_discard)
+            random.shuffle(self.state.list_card_draw)
             self.state.list_card_discard.clear()
-            # Create new deck of cards
-            self.state.list_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
-        cards_to_deal = [5, 4, 3, 2, 6][(self.state.cnt_round - 2) % 5]  # Calculate number of cards for distribution
+
+        # Deal cards to each player
         for player in self.state.list_player:
             while len(player.list_card) < cards_to_deal:
-                player.list_card.append(self.state.list_card_draw.pop())
+                # Ensure there are cards left in the draw pile before popping
+                if self.state.list_card_draw:
+                    player.list_card.append(self.state.list_card_draw.pop())
+                else:
+                    raise RuntimeError("Deck is unexpectedly empty during card dealing.")
 
         print(f"Starting Round {self.state.cnt_round}")
 
