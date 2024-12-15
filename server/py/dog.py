@@ -232,6 +232,11 @@ class Dog(Game):
                     actions.append(Action(card=card, pos_from=None, pos_to=None))
                     seen_cards.add(card)
         else:
+            if self.state.card_active != None: # if there is card active defined I need to get actions only for this card
+                player_cards_copy = player.list_card.copy()
+                player.list_card.clear()
+                player.list_card.append(self.state.card_active)
+
             # Checking if all marbles in the finish to help partner
             if all(marble.pos in finish_position for marble in player.list_marble):
                 teammate_index = (self.state.idx_player_active + 2) % 4
@@ -294,6 +299,10 @@ class Dog(Game):
                                         new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
                                         actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
 
+            if self.state.card_active != None:
+                self.state.card_active = None
+                player.list_card = player_cards_copy
+
         # Validation of actions
         validated_actions = []
 
@@ -332,7 +341,26 @@ class Dog(Game):
                 self.end_start_round()
 
         else:
-            if action.card.rank == "J":
+            # Handle card swapping (e.g., with a Joker). Test 28
+            if action.card.rank == "JKR" and action.card_swap is not None:
+                # Check if the player has exactly two JOKER cards
+                jkr_cards = [card for card in current_player.list_card if card.rank == 'JKR']
+
+                if len(jkr_cards) == 2:
+                    # Remove one JOKER card and add the card to be swapped
+                    current_player.list_card.remove(jkr_cards[0])  # Remove one JOKER
+                    current_player.list_card.append(action.card_swap)  # Add the card to swap
+
+                    # Print for debugging
+                    print(
+                        f"Player {current_player.name} swapped a JOKER for {action.card_swap.rank}{action.card_swap.suit}.")
+                else:
+                    # Handle cases where the player doesn't have exactly two JOKER cards
+                    print("Player does not have exactly two JOKER cards.")
+                    self.state.card_active = action.card_swap
+                    print(f'Active card: {self.state.card_active}')
+
+            if action.card.rank == 'J':
                 self.exchange_marbles(current_player, action)
             elif action.pos_from is not None and action.pos_to is not None:
                 # Check if the action involves a teammate's marble
@@ -349,23 +377,6 @@ class Dog(Game):
                         print(f"Marble moved from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
                     else:
                         print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
-
-                # Handle card swapping (e.g., with a Joker). Test 28
-            if action.card.rank == "JKR" and action.card_swap is not None:
-                # Check if the player has exactly two JOKER cards
-                jkr_cards = [card for card in current_player.list_card if card.rank == 'JKR']
-
-                if len(jkr_cards) == 2:
-                    # Remove one JOKER card and add the card to be swapped
-                    current_player.list_card.remove(jkr_cards[0])  # Remove one JOKER
-                    current_player.list_card.append(action.card_swap)  # Add the card to swap
-
-                    # Print for debugging
-                    print(
-                        f"Player {current_player.name} swapped a JOKER for {action.card_swap.rank}{action.card_swap.suit}.")
-                else:
-                    # Handle cases where the player doesn't have exactly two JOKER cards
-                    print("Player does not have exactly two JOKER cards.")
 
 # ---- MARBLES METHODS----
 
