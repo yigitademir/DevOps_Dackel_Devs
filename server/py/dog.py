@@ -232,7 +232,7 @@ class Dog(Game):
                     actions.append(Action(card=card, pos_from=None, pos_to=None))
                     seen_cards.add(card)
         else:
-            if self.state.card_active != None: # if there is card active defined I need to get actions only for this card
+            if self.state.card_active is not None: # if card active is defined I need to get actions only for this card
                 player_cards_copy = player.list_card.copy()
                 player.list_card.clear()
                 player.list_card.append(self.state.card_active)
@@ -270,8 +270,14 @@ class Dog(Game):
                             pos_to = start_position
                             actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
                             for suit in list_suit:
-                                actions.append(Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='A')))
-                                actions.append(Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='K')))
+                                actions.append(Action(card=card,
+                                                      pos_from=None,
+                                                      pos_to=None,
+                                                      card_swap=Card(suit=suit, rank='A')))
+                                actions.append(Action(card=card,
+                                                      pos_from=None,
+                                                      pos_to=None,
+                                                      card_swap=Card(suit=suit, rank='K')))
                         else:
                             pos_from = kennel_position[0]
                             pos_to = start_position
@@ -297,7 +303,9 @@ class Dog(Game):
                                     # Loop through all possible moves for the card
                                     for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
                                         new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                                        actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+                                        actions.append(Action(card=card,
+                                                              pos_from=marble.pos,
+                                                              pos_to=new_position))  # Add valid action
 
             if self.state.card_active != None:
                 self.state.card_active = None
@@ -353,7 +361,7 @@ class Dog(Game):
 
                     # Print for debugging
                     print(
-                        f"Player {current_player.name} swapped a JOKER for {action.card_swap.rank}{action.card_swap.suit}.")
+                        f"Player {current_player.name} swapped a JOKER for {action.card_swap.rank}{action.card_swap.suit}.") # pylint: disable=line-too-long
                 else:
                     # Handle cases where the player doesn't have exactly two JOKER cards
                     print("Player does not have exactly two JOKER cards.")
@@ -367,7 +375,7 @@ class Dog(Game):
                 teammate_index = (self.state.idx_player_active + 2) % 4
                 teammate = self.state.list_player[teammate_index]
 
-                marble = next((m for m in current_player.list_marble + teammate.list_marble if m.pos == action.pos_from), None)
+                marble = next((m for m in current_player.list_marble + teammate.list_marble if m.pos == action.pos_from), None) # pylint: disable=line-too-long
 
                 if marble:
                     # Determine which player the marble belongs to
@@ -403,7 +411,7 @@ class Dog(Game):
         # Reset is_save after move away from start position
         if marble.pos == start_position and pos_to != start_position:
             marble.is_save = False
-            print(f"Marble moved out of start position and is no longer safe.")
+            print("Marble moved out of start position and is no longer safe.")
 
         # Determine valid positions based on steps.
         valid_steps = card.get_steps()  # Get the steps allowed for the card
@@ -433,7 +441,7 @@ class Dog(Game):
         # Move the marble
         marble.pos = pos_to
         return True
-    
+
     def exchange_marbles(self, current_player: PlayerState, action: Action) -> None:
         """
         Handle the marble exchange between the current player and an other player.
@@ -486,7 +494,7 @@ class Dog(Game):
                             if all(m.pos != pos for m in other_player.list_marble)
                         ]
                         other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
-                        print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.")
+                        print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.") # pylint: disable=line-too-long
                         return True
         return True
 
@@ -620,7 +628,7 @@ class Dog(Game):
     def end_start_round(self):
         """End the current round and prepare for the next."""
         self.state.cnt_round += 1
-        self.state.idx_player_active = (self.state.idx_player_started + self.state.cnt_round - 1) % self.state.cnt_player
+        self.state.idx_player_active = (self.state.idx_player_started + self.state.cnt_round - 1) % self.state.cnt_player # pylint: disable=line-too-long
         # self.state.idx_player_active = self.state.idx_player_started
         self.deal_cards_to_players()
         self.state.bool_card_exchanged = False # set exchange to false for all players
