@@ -216,7 +216,8 @@ class Dog(Game):
         """ Get a list of possible actions for the active player.
             Return lists of actions available depending on how many
             start cards the player has and whether marbles ar in kennel
-            or not.Tests 3, 4 and 5"""
+            or not.Tests 3, 4 and 5
+        """
         actions = []
         player = self.state.list_player[self.state.idx_player_active]
         common_track = Dog.BOARD["common_track"]
@@ -232,7 +233,7 @@ class Dog(Game):
                     actions.append(Action(card=card, pos_from=None, pos_to=None))
                     seen_cards.add(card)
         else:
-            if self.state.card_active != None: # if there is card active defined I need to get actions only for this card
+            if self.state.card_active is not None: # if card active is defined I need to get actions only for this card
                 player_cards_copy = player.list_card.copy()
                 player.list_card.clear()
                 player.list_card.append(self.state.card_active)
@@ -245,7 +246,7 @@ class Dog(Game):
                 # Temporarily override the marbles to iterate over teammate's marbles
                 index_to_process = teammate_index
                 marbles_to_process = teammate.list_marble
-                print(f"Processing teammate marbles because all player marbles are in finish.")
+                print("Processing teammate marbles because all player marbles are in finish.")
             else:
                 index_to_process = self.state.idx_player_active
                 # Process the player's own marbles
@@ -270,8 +271,14 @@ class Dog(Game):
                             pos_to = start_position
                             actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
                             for suit in list_suit:
-                                actions.append(Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='A')))
-                                actions.append(Action(card=card, pos_from=None, pos_to=None, card_swap=Card(suit=suit, rank='K')))
+                                actions.append(Action(card=card,
+                                                      pos_from=None,
+                                                      pos_to=None,
+                                                      card_swap=Card(suit=suit, rank='A')))
+                                actions.append(Action(card=card,
+                                                      pos_from=None,
+                                                      pos_to=None,
+                                                      card_swap=Card(suit=suit, rank='K')))
                         else:
                             pos_from = kennel_position[0]
                             pos_to = start_position
@@ -297,9 +304,11 @@ class Dog(Game):
                                     # Loop through all possible moves for the card
                                     for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
                                         new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                                        actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+                                        actions.append(Action(card=card,
+                                                              pos_from=marble.pos,
+                                                              pos_to=new_position))  # Add valid action
 
-            if self.state.card_active != None:
+            if self.state.card_active is not None:
                 self.state.card_active = None
                 player.list_card = player_cards_copy
 
@@ -353,7 +362,7 @@ class Dog(Game):
 
                     # Print for debugging
                     print(
-                        f"Player {current_player.name} swapped a JOKER for {action.card_swap.rank}{action.card_swap.suit}.")
+                        f"Player {current_player.name} swapped a JOKER for {action.card_swap.rank}{action.card_swap.suit}.") # pylint: disable=line-too-long
                 else:
                     # Handle cases where the player doesn't have exactly two JOKER cards
                     print("Player does not have exactly two JOKER cards.")
@@ -367,7 +376,7 @@ class Dog(Game):
                 teammate_index = (self.state.idx_player_active + 2) % 4
                 teammate = self.state.list_player[teammate_index]
 
-                marble = next((m for m in current_player.list_marble + teammate.list_marble if m.pos == action.pos_from), None)
+                marble = next((m for m in current_player.list_marble + teammate.list_marble if m.pos == action.pos_from), None) # pylint: disable=line-too-long
 
                 if marble:
                     # Determine which player the marble belongs to
@@ -403,7 +412,7 @@ class Dog(Game):
         # Reset is_save after move away from start position
         if marble.pos == start_position and pos_to != start_position:
             marble.is_save = False
-            print(f"Marble moved out of start position and is no longer safe.")
+            print("Marble moved out of start position and is no longer safe.")
 
         # Determine valid positions based on steps.
         valid_steps = card.get_steps()  # Get the steps allowed for the card
@@ -433,7 +442,7 @@ class Dog(Game):
         # Move the marble
         marble.pos = pos_to
         return True
-    
+
     def exchange_marbles(self, current_player: PlayerState, action: Action) -> None:
         """
         Handle the marble exchange between the current player and an other player.
@@ -479,15 +488,15 @@ class Dog(Game):
                     if other_marble.is_save:
                         print(f"Impossible, marble at position {other_marble.pos} is safe.")
                         return False
-                    else:
-                        # Send the marble back to the kennel
-                        empty_kennel_positions = [
-                            pos for pos in board["kennels"][self.state.list_player.index(other_player)]
-                            if all(m.pos != pos for m in other_player.list_marble)
-                        ]
-                        other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
-                        print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.")
-                        return True
+
+                    # Send the marble back to the kennel
+                    empty_kennel_positions = [
+                        pos for pos in board["kennels"][self.state.list_player.index(other_player)]
+                        if all(m.pos != pos for m in other_player.list_marble)
+                    ]
+                    other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
+                    print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.") # pylint: disable=line-too-long
+                    return True
         return True
 
     def validate_no_overtaking_in_finish(self, action):
@@ -614,7 +623,7 @@ class Dog(Game):
     def end_start_round(self):
         """End the current round and prepare for the next."""
         self.state.cnt_round += 1
-        self.state.idx_player_active = (self.state.idx_player_started + self.state.cnt_round - 1) % self.state.cnt_player
+        self.state.idx_player_active = (self.state.idx_player_started + self.state.cnt_round - 1) % self.state.cnt_player # pylint: disable=line-too-long
         # self.state.idx_player_active = self.state.idx_player_started
         self.deal_cards_to_players()
         self.state.bool_card_exchanged = False # set exchange to false for all players
@@ -637,20 +646,30 @@ class Dog(Game):
 
     def deal_cards_to_players(self):
         """Deal new cards to players at the start of a new round."""
+        # Calculate the number of cards to deal to each player
+        cards_to_deal = [5, 4, 3, 2, 6][(self.state.cnt_round - 2) % 5]
+        total_cards_needed = cards_to_deal * self.state.cnt_player  # 4 players
+
         if not self.state.list_card_draw:
-            # Clear the discard pile
-            self.state.list_card_discard.clear()
             # Create new deck of cards
             self.state.list_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
-        cards_to_deal = [5, 4, 3, 2, 6][(self.state.cnt_round - 2) % 5]  # Calculate number of cards for distribution
+            # Clear the discard pile
+            self.state.list_card_discard.clear()
+        # Check if there are enough cards in the draw pile
+        elif len(self.state.list_card_draw) < total_cards_needed:
+            # Not enough cards, shuffle the discard pile into the draw pile
+            self.state.list_card_draw.extend(self.state.list_card_discard)
+            random.shuffle(self.state.list_card_draw)
+            self.state.list_card_discard.clear()
+
+        # Deal cards to each player
         for player in self.state.list_player:
             while len(player.list_card) < cards_to_deal:
-                if not self.state.list_card_draw:
-                    # Clear the discard pile
-                    self.state.list_card_discard.clear()
-                    # Create new deck of cards
-                    self.state.list_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
-                player.list_card.append(self.state.list_card_draw.pop())
+                # Ensure there are cards left in the draw pile before popping
+                if self.state.list_card_draw:
+                    player.list_card.append(self.state.list_card_draw.pop())
+                else:
+                    raise RuntimeError("Deck is unexpectedly empty during card dealing.")
 
         print(f"Starting Round {self.state.cnt_round}")
 
