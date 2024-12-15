@@ -220,7 +220,6 @@ class Dog(Game):
         """
         actions = []
         player = self.state.list_player[self.state.idx_player_active]
-        common_track = Dog.BOARD["common_track"]
         start_position = Dog.BOARD["starts"][self.state.idx_player_active]
         kennel_position = Dog.BOARD["kennels"][self.state.idx_player_active]
         finish_position = Dog.BOARD["finishes"][self.state.idx_player_active]
@@ -307,6 +306,31 @@ class Dog(Game):
                                         actions.append(Action(card=card,
                                                               pos_from=marble.pos,
                                                               pos_to=new_position))  # Add valid action
+
+                            elif card.rank == '7':
+                                partitions = self.get_seven_actions(7)
+
+                                # Generate all possible assignments
+                                for partition in partitions:
+                                    if len(partition) > len(marbles_to_process):
+                                        continue
+
+                                    # Assign each partition to unique marble
+                                    marble_combinations = permutations(marbles_to_process, len(partition))
+                                    for combination in marble_combinations:
+                                        sub_actions = []
+                                        for marble, steps in zip(combination, partition):
+                                            pos_from = marble.pos
+                                            pos_to = (pos_from + steps) % len(Dog.BOARD["common_track"])
+
+                                            # Validate move before adding it
+                                            if self.validate_seven_action(pos_from, pos_to):
+                                                sub_actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
+                                            else:
+                                                break
+
+                                        if len(sub_actions) == len(partition):
+                                            actions.extend(sub_actions)
 
             if self.state.card_active is not None:
                 self.state.card_active = None
