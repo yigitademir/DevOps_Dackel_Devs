@@ -517,12 +517,6 @@ class Dog(Game):
                             action.pos_from < marble.pos <= action.pos_to):
                             return False  # Action overtakes a blocking marble
 
-        # # Special case: Allow swapping own marble in a safe state for jake
-        # if action.card.rank == 'J':  # Check if the card's rank is 'J'
-        #     for marble in self.state.list_player[self.state.idx_player_active].list_marble:
-        #         if marble.is_save and action.pos_to == marble.pos:
-        #             return True  # Allow swap with own safe marble
-
         return True  # No blocking marble is overtaken
 
 # ---- CARDS METHODS ----
@@ -651,6 +645,11 @@ class Dog(Game):
         cards_to_deal = [5, 4, 3, 2, 6][(self.state.cnt_round - 2) % 5]  # Calculate number of cards for distribution
         for player in self.state.list_player:
             while len(player.list_card) < cards_to_deal:
+                if not self.state.list_card_draw:
+                    # Clear the discard pile
+                    self.state.list_card_discard.clear()
+                    # Create new deck of cards
+                    self.state.list_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
                 player.list_card.append(self.state.list_card_draw.pop())
 
         print(f"Starting Round {self.state.cnt_round}")
