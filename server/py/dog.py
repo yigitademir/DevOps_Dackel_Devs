@@ -23,7 +23,7 @@ class Card(BaseModel):
     def get_steps(self):
         # Map rank to allowed steps
         step_mapping = {'A': [1, 11], '2': [2], '3': [3], '4': [4, -4], '5': [5],
-                        '6': [6], '8': [8], '9': [9], '10': [10], 'Q': [12], 'K': [13]}
+                        '6': [6], '7':[1, 2, 3, 4, 5, 6, 7], '8': [8], '9': [9], '10': [10], 'Q': [12], 'K': [13]}
         steps = step_mapping.get(self.rank, [])
         return steps
 
@@ -399,6 +399,33 @@ class Dog(Game):
 
             if action.card.rank == 'J':
                 self.exchange_marbles(current_player, action)
+
+            # Integrate card 7 logic:
+            elif action.card.rank == '7':
+                # For card 7, we apply the movement similarly to other cards
+                teammate_index = (self.state.idx_player_active + 2) % 4
+                teammate = self.state.list_player[teammate_index]
+                marble = next((m for m in current_player.list_marble + teammate.list_marble if m.pos == action.pos_from), None)
+
+                if marble:
+                    marble_owner = current_player if marble in current_player.list_marble else teammate
+                    movement_success = self.move_marble(marble, action.card, action.pos_to, marble_owner)
+
+                    if movement_success:
+                        print(f"Marble moved from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
+                        # If this is the first successful move with a 7 card, set card_active
+                        if self.state.card_active is None:
+                            self.state.card_active = action.card
+                        # Do not remove the card or move to the next player here.
+                        # The player may still have steps left to use from the 7 card.
+                        # Just return so the player can continue with the next step of the 7.
+                        return
+
+                    else:
+                        print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
+                        # If the move fails, proceed as normal (card will be removed and player changes)
+                        # This allows the logic to handle inability to complete all 7 steps.
+
             elif action.pos_from is not None and action.pos_to is not None:
                 # Check if the action involves a teammate's marble
                 teammate_index = (self.state.idx_player_active + 2) % 4
@@ -418,11 +445,6 @@ class Dog(Game):
 # ---- MARBLES METHODS----
 
     def move_marble(self, marble: Marble, card: Card, pos_to: int, player: PlayerState) -> bool:
-        """
-        Move marble to a new position and handle collisions.
-        If a marble is at the destination, it is sent back to its kennel.
-        Returns: True if the move is successful, False otherwise.
-        """
         board = Dog.BOARD
         current_pos = marble.pos
 
@@ -442,12 +464,10 @@ class Dog(Game):
             marble.is_save = False
             print("Marble moved out of start position and is no longer safe.")
 
-        # Determine valid positions based on steps.
         valid_steps = card.get_steps()  # Get the steps allowed for the card
         valid_positions = [(current_pos + step) % len(board["common_track"]) for step in valid_steps]
 
-        if card.rank == "7":
-            return True
+        # Remove any early return for card 7
 
         # Check if the move is valid
         if pos_to not in valid_positions:
@@ -467,8 +487,9 @@ class Dog(Game):
                 print(f"Invalid move: cannot overtake within the finish line to position {pos_to}.")
                 return False
 
-        # Move the marble
+        # Just update the marble's position
         marble.pos = pos_to
+
         return True
 
     def exchange_marbles(self, current_player: PlayerState, action: Action) -> None:
