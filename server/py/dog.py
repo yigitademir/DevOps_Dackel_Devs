@@ -3,7 +3,7 @@ from enum import Enum
 import random
 from itertools import combinations_with_replacement, permutations
 from pydantic import BaseModel
-from game import Game, Player
+from server.py.game import Game, Player
 
 class Card(BaseModel):
     suit: str  # card suit (color)
