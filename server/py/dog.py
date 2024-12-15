@@ -226,11 +226,8 @@ class Dog(Game):
         list_suit: List[str] = ['♠', '♥', '♦', '♣']
 
         if not self.state.bool_card_exchanged:
-            seen_cards = set()
-            for card in player.list_card:
-                if card not in seen_cards:  # Avoid adding duplicate cards
+            for card in set(player.list_card):    # Avoid adding duplicate cards
                     actions.append(Action(card=card, pos_from=None, pos_to=None))
-                    seen_cards.add(card)
             return actions
 
         if self.state.bool_card_exchanged:
@@ -246,9 +243,9 @@ class Dog(Game):
                 # Process the player's own marbles
                 marbles_to_process = player.list_marble
                 print(f"Processing player marbles.")
-
-        # Game start: Checking if any marbles are in the kennel
-        for _ in [0]: # dummy loop to handle exit when start position is blocked
+                
+        # Game start: Checking if any marbles are in the kennel       
+        for _ in [0]: # dummy loop to handle exit when start position is blocke
             if any(marble.pos in kennel_position for marble in marbles_to_process):
 
                 # Check for self-block on start position
@@ -287,11 +284,20 @@ class Dog(Game):
                             marble.pos not in Dog.BOARD["finishes"][self.state.idx_player_active]): # checking for exchange attribute Jack
                             jack_actions = self.get_jack_actions(marble, card)
                             actions.extend(jack_actions)
-
+                            
                             # Loop through all possible moves for the card
                             for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
                                 new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                                actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+                                actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))
+                                
+                                # Check if the marble has passed its start position and if it's eligible to move to the finish
+                                if not marble.is_save:                                     # Passed start
+                                    if (new_position-move) <= start_position < new_position:  # would move over or from startposition
+                                        steps_passed_start = (new_position - start_position)
+                                        if 0 < steps_passed_start <= 4:
+                                            endzone_position = finish_position[steps_passed_start - 1]
+                                            actions.append(Action(card=card, pos_from = marble.pos, pos_to = endzone_position))  # Action to move to finish
+
 
             # Validation of actions
             actions = self.filter_invalid_actions_save_marble(actions)
@@ -500,8 +506,18 @@ class Dog(Game):
 
             for player in self.state.list_player:
                 for marble in player.list_marble:
-                    if marble.is_save:
+                    if marble.is_save and marble.pos != 0:
                         if action.pos_from < marble.pos <= action.pos_to:
+                            action_valid = False
+                            break
+                        elif action.pos_from > marble.pos >= action.pos_to: #if going backwards
+                            action_valid = False
+                            break
+                    elif marble.is_save and marble.pos == 0:
+                        if action.pos_from > marble.pos >= action.pos_to:
+                            action_valid = False
+                            break
+                        elif action.pos_from < marble.pos <= action.pos_to: #if going backwards
                             action_valid = False
                             break
                 if not action_valid:
@@ -637,7 +653,6 @@ class Dog(Game):
                     action.card_swap == action_to_check.card_swap):
                 return True
             return False
-
 
 class RandomPlayer(Player):
 
