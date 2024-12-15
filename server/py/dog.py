@@ -216,7 +216,8 @@ class Dog(Game):
         """ Get a list of possible actions for the active player.
             Return lists of actions available depending on how many
             start cards the player has and whether marbles ar in kennel
-            or not.Tests 3, 4 and 5"""
+            or not.Tests 3, 4 and 5
+        """
         actions = []
         player = self.state.list_player[self.state.idx_player_active]
         common_track = Dog.BOARD["common_track"]
@@ -245,7 +246,7 @@ class Dog(Game):
                 # Temporarily override the marbles to iterate over teammate's marbles
                 index_to_process = teammate_index
                 marbles_to_process = teammate.list_marble
-                print(f"Processing teammate marbles because all player marbles are in finish.")
+                print("Processing teammate marbles because all player marbles are in finish.")
             else:
                 index_to_process = self.state.idx_player_active
                 # Process the player's own marbles
@@ -307,7 +308,7 @@ class Dog(Game):
                                                               pos_from=marble.pos,
                                                               pos_to=new_position))  # Add valid action
 
-            if self.state.card_active != None:
+            if self.state.card_active is not None:
                 self.state.card_active = None
                 player.list_card = player_cards_copy
 
@@ -487,15 +488,15 @@ class Dog(Game):
                     if other_marble.is_save:
                         print(f"Impossible, marble at position {other_marble.pos} is safe.")
                         return False
-                    else:
-                        # Send the marble back to the kennel
-                        empty_kennel_positions = [
-                            pos for pos in board["kennels"][self.state.list_player.index(other_player)]
-                            if all(m.pos != pos for m in other_player.list_marble)
-                        ]
-                        other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
-                        print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.") # pylint: disable=line-too-long
-                        return True
+
+                    # Send the marble back to the kennel
+                    empty_kennel_positions = [
+                        pos for pos in board["kennels"][self.state.list_player.index(other_player)]
+                        if all(m.pos != pos for m in other_player.list_marble)
+                    ]
+                    other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
+                    print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.") # pylint: disable=line-too-long
+                    return True
         return True
 
     def validate_no_overtaking_in_finish(self, action):
