@@ -273,36 +273,40 @@ class Dog(Game):
                             pos_to = start_position
                             actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
-            # Actions for which I don't need any marbles
-            if any(card.rank == 'JKR' for card in player.list_card):  # Joker actions
-                joker_actions = self.get_joker_actions_later_in_game()
-                actions.extend(joker_actions)
+            if any(marble.pos not in kennel_position for marble in marbles_to_process):
+                # Actions for which I don't need any marbles
+                if any(card.rank == 'JKR' for card in player.list_card):  # Joker actions
+                    joker_actions = self.get_joker_actions_later_in_game()
+                    actions.extend(joker_actions)
 
-            # Actions for marbles outside of kennel
-            for marble in marbles_to_process:
-                if marble.pos not in Dog.BOARD["kennels"][index_to_process]:  # Marble is outside the kennel
-                    for card in player.list_card:
-                        if card.rank != 'JKR':
-                            if card.rank in Dog.RANK_ACTIONS:  # Ensure the card rank is valid
-                                if card.rank == 'J': # Actions for jack
-                                    if marble.pos not in Dog.BOARD["finishes"][index_to_process]:
-                                        jack_actions = self.get_jack_actions(marble, card)
-                                        actions.extend(jack_actions)
+                # Actions for marbles outside of kennel
+                for marble in marbles_to_process:
+                    if marble.pos not in Dog.BOARD["kennels"][index_to_process]:  # Marble is outside the kennel
+                        for card in player.list_card:
+                            if card.rank != 'JKR':
+                                if card.rank in Dog.RANK_ACTIONS:  # Ensure the card rank is valid
+                                    if card.rank == 'J': # Actions for jack
+                                        if marble.pos not in Dog.BOARD["finishes"][index_to_process]:
+                                            jack_actions = self.get_jack_actions(marble, card)
+                                            actions.extend(jack_actions)
 
-                                # Loop through all possible moves for the card
-                                for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
-                                    new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                                    actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+                                    # Loop through all possible moves for the card
+                                    for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
+                                        new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
+                                        actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
 
         # Validation of actions
-        # actions = self.filter_invalid_actions_save_marble(actions)
         validated_actions = []
 
         for action in actions:
             if not self.is_duplicated_action(action, validated_actions):  # checking for duplicated actions
                 if self.validate_no_overtaking_in_finish(action):  # checking overtaking in finish
-                    validated_actions.append(action)
-                # Further logic for additional game phases or card actions can go here...
+                    if not action.card.rank == 'J':
+                        if self.is_overtaking_save_marble(action):
+                            validated_actions.append(action)
+                    else:
+                        validated_actions.append(action)
+                    # Further logic for additional game phases or card actions can go here...
 
         return validated_actions  # Ensuring to return a list
 
@@ -492,25 +496,24 @@ class Dog(Game):
 
         return True # Action is valid, on overtaking in the finish
 
-    def filter_invalid_actions_save_marble(self, actions):
-        """Checks if actions are not overtaking a blocking marble."""
-        filtered_actions = []
+    def is_overtaking_save_marble(self, action):
+        """Checks if actions are not overtaking a blocking marble, but allows swapping own marbles in a safe state."""
+        for player in self.state.list_player:
+            if player != self.state.list_player[self.state.idx_player_active]:  # Check opponents only
+                for marble in player.list_marble:
+                    if marble.is_save:  # Opponent's marble is in a safe state
+                        if (action.pos_from is not None and
+                            action.pos_to is not None and
+                            action.pos_from < marble.pos <= action.pos_to):
+                            return False  # Action overtakes a blocking marble
 
-        for action in actions:
-            action_valid = True
-            if action.card.rank != 'J':
-                for player in self.state.list_player:
-                    for marble in player.list_marble:
-                        if marble.is_save:
-                            if action.pos_from is not None and action.pos_to is not None and action.pos_from < marble.pos <= action.pos_to:
-                                action_valid = False
-                                break
-                    if not action_valid:
-                        break
-                if action_valid:
-                    filtered_actions.append(action)
+        # # Special case: Allow swapping own marble in a safe state for jake
+        # if action.card.rank == 'J':  # Check if the card's rank is 'J'
+        #     for marble in self.state.list_player[self.state.idx_player_active].list_marble:
+        #         if marble.is_save and action.pos_to == marble.pos:
+        #             return True  # Allow swap with own safe marble
 
-        return filtered_actions
+        return True  # No blocking marble is overtaken
 
 # ---- CARDS METHODS ----
     @staticmethod
