@@ -308,28 +308,32 @@ class Dog(Game):
                                                               pos_to=new_position))  # Add valid action
 
                             elif card.rank == '7':
-                                partitions = self.get_seven_actions(7)
+                                partitions = self.get_seven_actions(7, marbles_to_process)
 
                                 # Generate all possible assignments
                                 for partition in partitions:
                                     if len(partition) > len(marbles_to_process):
                                         continue
 
-                                    # Assign each partition to unique marble
+                                    # Generate all assignments of splits to marbles
                                     marble_combinations = permutations(marbles_to_process, len(partition))
-                                    for combination in marble_combinations:
+                                    for marble_set in marble_combinations:
+                                        is_valid = True
                                         sub_actions = []
-                                        for marble, steps in zip(combination, partition):
+
+                                        for marble, steps in zip(marble_set, partition):
                                             pos_from = marble.pos
                                             pos_to = (pos_from + steps) % len(Dog.BOARD["common_track"])
 
                                             # Validate move before adding it
-                                            if self.validate_seven_action(pos_from, pos_to):
-                                                sub_actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
-                                            else:
+                                            if not self.validate_seven_action(marble, pos_from, pos_to):
+                                                is_valid = False
                                                 break
 
-                                        if len(sub_actions) == len(partition):
+                                            # Add action
+                                            sub_actions.append(Action(card=card,pos_from=pos_from,pos_to=pos_to))
+
+                                        if is_valid:
                                             actions.extend(sub_actions)
 
             if self.state.card_active is not None:
@@ -553,25 +557,47 @@ class Dog(Game):
         return True  # No blocking marble is overtaken
 
 # ---- CARDS METHODS ----
-    @staticmethod
-    def get_seven_actions(total_steps):
+    def get_seven_actions(self, total_steps: int, marbles: List[Marble]) -> List[List[int]]:
         """Generate all possible step combinations for card '7' to split between marbles."""
-        def find_partitions(n, max_part):
+        def find_partitions(n, max_parts):
             """Helper function to recursively find partitions of n"""
             if n == 0:
                 yield []
-            for i in range(1, min(n, max_part) + 1):
+            for i in range(1, min(n, max_parts) + 1):
                 for subpartition in find_partitions(n-i, i):
                     yield [i] + subpartition
 
-        # Generate all unique partitions of total steps.
-        partitions = list(find_partitions(total_steps, 7))
+        # Get the maximum number of splits
+        max_splits = min(len(marbles), total_steps)
 
-        # For each partition, create all permutations to represent different move orders
+        # Generate all valid partitions
+        partitions = list(find_partitions(total_steps, max_splits))
+
         all_moves = set()
         for partition in partitions:
             all_moves.update(permutations(partition))
+
         return sorted(all_moves)
+
+    def validate_seven_action(self, marble: Marble, pos_from: int, pos_to: int) -> bool:
+        """
+        Validate a single move for card 7:
+        - Check for collisions or overtaking.
+        - Handle sending marbles back to the kennel in case of collisions.
+        """
+        # Check if the destination position is valid and handle collisions
+        if not self.handle_collision(pos_to):
+            print(f"Invalid move: Collision at position {pos_to}. Marble cannot move.")
+            return False
+
+        # Check if the move is within valid positions
+        # For card 7, valid steps are calculated dynamically, so this checks the bounds of the board.
+        if pos_to < 0 or pos_to >= len(Dog.BOARD["common_track"]):
+            print(f"Invalid move: Position {pos_to} is out of bounds.")
+            return False
+
+        # If no issues, return True
+        return True
 
     @staticmethod
     def get_joker_actions_later_in_game():
