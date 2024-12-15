@@ -647,8 +647,13 @@ class Dog(Game):
         cards_to_deal = [5, 4, 3, 2, 6][(self.state.cnt_round - 2) % 5]
         total_cards_needed = cards_to_deal * self.state.cnt_player  # 4 players
 
+        if not self.state.list_card_draw:
+            # Create new deck of cards
+            self.state.list_card_draw = random.sample(self.state.LIST_CARD, len(self.state.LIST_CARD))
+            # Clear the discard pile
+            self.state.list_card_discard.clear()
         # Check if there are enough cards in the draw pile
-        if len(self.state.list_card_draw) < total_cards_needed:
+        elif len(self.state.list_card_draw) < total_cards_needed:
             # Not enough cards, shuffle the discard pile into the draw pile
             self.state.list_card_draw.extend(self.state.list_card_discard)
             random.shuffle(self.state.list_card_draw)
