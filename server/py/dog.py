@@ -233,7 +233,6 @@ class Dog(Game):
         if not self.state.bool_card_exchanged:
             for card in set(player.list_card):    # Avoid adding duplicate cards
                     actions.append(Action(card=card, pos_from=None, pos_to=None))
-
         else:
             # if card active is defined need to get actions only for this card e.g. swapped card or seven
             if self.state.card_active is not None:
@@ -311,6 +310,15 @@ class Dog(Game):
                                             new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
                                             actions.append(Action(card = card, pos_from = marble.pos, pos_to = new_position))  # Add valid action
 
+                                            # ??? Check if the marble has passed its start position and if it's eligible to move to the finish
+                                            if not marble.is_save:  # Passed start
+                                                if (new_position - move) <= start_position < new_position:  # would move over or from startposition
+                                                    steps_passed_start = (new_position - start_position)
+                                                    if 0 < steps_passed_start <= 4:
+                                                        endzone_position = finish_position[steps_passed_start - 1]
+                                                        actions.append(Action(card=card, pos_from=marble.pos,
+                                                                              pos_to=endzone_position))  # Action to move to finish
+
                 # Need a different approach to card 7
                 for card in player.list_card:
                     if card.rank == '7':
@@ -330,20 +338,11 @@ class Dog(Game):
                                         new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
                                         actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
 
-
-                                        # Check if the marble has passed its start position and if it's eligible to move to the finish
-                                        if not marble.is_save:                                     # Passed start
-                                            if (new_position-move) <= start_position < new_position:  # would move over or from startposition
-                                                steps_passed_start = (new_position - start_position)
-                                                if 0 < steps_passed_start <= 4:
-                                                    endzone_position = finish_position[steps_passed_start - 1]
-                                                    actions.append(Action(card=card, pos_from = marble.pos, pos_to = endzone_position))  # Action to move to finish
-
             if self.state.card_active is not None:
                 if self.state.seven_steps_left == 7:
                     self.state.card_active = None
                     player.list_card = player.list_card_copy
-                    player.list_card_copy = [] # reseting to empty list
+                    player.list_card_copy = [] # reset to empty list
 
         # Validation of actions
         validated_actions: List[Action] = []
@@ -386,25 +385,25 @@ class Dog(Game):
             if action.pos_from is None and action.pos_to is None:
                 self.exchange_cards(action)
 
-            elif action.pos_from is not None and action.pos_to is not None:
-                # Check if the action involves a teammate's marble
-                teammate_index = (self.state.idx_player_active + 2) % 4
-                teammate = self.state.list_player[teammate_index]
-
-                marble = next((m for m in current_player.list_marble + teammate.list_marble if m.pos == action.pos_from), None)
-
-                if marble:
-                    # Determine which player the marble belongs to
-                    marble_owner = (current_player if marble in current_player.list_marble else teammate)
-                    movement_success = self.move_marble(marble, action.card, action.pos_to, marble_owner)
-                    if movement_success:
-                        print(f"Marble moved from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
-                    else:
-                        print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
-
-            if action.card.rank == "J":
-                self.exchange_marbles(current_player, action)
-
+            # elif action.pos_from is not None and action.pos_to is not None:
+            #     # Check if the action involves a teammate's marble
+            #     teammate_index = (self.state.idx_player_active + 2) % 4
+            #     teammate = self.state.list_player[teammate_index]
+            #
+            #     marble = next((m for m in current_player.list_marble + teammate.list_marble if m.pos == action.pos_from), None)
+            #
+            #     if marble:
+            #         # Determine which player the marble belongs to
+            #         marble_owner = (current_player if marble in current_player.list_marble else teammate)
+            #         movement_success = self.move_marble(marble, action.card, action.pos_to, marble_owner)
+            #         if movement_success:
+            #             print(f"Marble moved from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
+            #         else:
+            #             print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
+            #
+            # if action.card.rank == "J":
+            #     self.exchange_marbles(current_player, action)
+            #
             # Handle card swapping (e.g., with a Joker). Test 28
             if action.card.rank == "JKR" and action.card_swap is not None:
                 # Check if the player has exactly two JOKER cards
