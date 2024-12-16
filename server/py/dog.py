@@ -1,4 +1,3 @@
-from copy import deepcopy
 from typing import List, Optional, ClassVar, Tuple
 from enum import Enum
 import random
@@ -38,13 +37,13 @@ class PlayerState(BaseModel):
     list_card: List[Card]      # list of cards
     list_marble: List[Marble]  # list of marbles
     team_id: int               # team_id
+    list_card_copy: Optional[List[Card]] = None # copy of list of cards to handle 7
 
 class Action(BaseModel):
     card: Card                 # card to play
     pos_from: Optional[int] = Field(default=None)    # position to move the marble from
     pos_to: Optional[int] = Field(default=None)      # position to move the marble to
     card_swap: Optional[Card] = Field(default=None)  # optional card to swap ()
-    partial_seven_moves: Optional[List[Tuple[int, int]]] = Field(default=None)
 
     # Add __eq__ and __hash__ methods to the Action class so that
     # it can be included in hashable objects like sets or dictionaries.
@@ -112,6 +111,7 @@ class GameState(BaseModel):
     list_card_draw: List[Card]         # list of cards to draw
     list_card_discard: List[Card]      # list of cards discarded
     card_active: Optional[Card]        # active card (for 7 and JKR with sequence of actions)
+    seven_steps_left: int = 7  # optional indicator for seven
 
 class Dog(Game):
     BOARD = {
@@ -142,7 +142,7 @@ class Dog(Game):
     "4": {"start": False, "moves": [4, -4]},
     "5": {"start": False, "moves": [5]},
     "6": {"start": False, "moves": [6]},
-    "7": {"start": False, "split": True, "moves": [7]},  # Special rule: Split
+    "7": {"start": False, "moves": [1,2,3,4,5,6,7], "split": True,},  # Special rule: Split
     "8": {"start": False, "moves": [8]},
     "9": {"start": False, "moves": [9]},
     "10": {"start": False, "moves": [10]},
@@ -234,8 +234,9 @@ class Dog(Game):
                     actions.append(Action(card=card, pos_from=None, pos_to=None))
                     seen_cards.add(card)
         else:
-            if self.state.card_active is not None: # if card active is defined I need to get actions only for this card
-                player_cards_copy = player.list_card.copy()
+            # if card active is defined need to get actions only for this card e.g. swapped card or seven
+            if self.state.card_active is not None:
+                player.list_card_copy = player.list_card.copy()
                 player.list_card.clear()
                 player.list_card.append(self.state.card_active)
 
@@ -286,6 +287,7 @@ class Dog(Game):
                             actions.append(Action(card=card, pos_from=pos_from, pos_to=pos_to))
 
             if any(marble.pos not in kennel_position for marble in marbles_to_process):
+                marbles_outside_of_kennel = []
                 # Actions for which I don't need any marbles
                 if any(card.rank == 'JKR' for card in player.list_card):  # Joker actions
                     joker_actions = self.get_joker_actions_later_in_game()
@@ -294,6 +296,7 @@ class Dog(Game):
                 # Actions for marbles outside of kennel
                 for marble in marbles_to_process:
                     if marble.pos not in Dog.BOARD["kennels"][index_to_process]:  # Marble is outside the kennel
+                        marbles_outside_of_kennel.append(marble)
                         for card in player.list_card:
                             if card.rank != 'JKR':
                                 if card.rank in Dog.RANK_ACTIONS:  # Ensure the card rank is valid
@@ -302,41 +305,31 @@ class Dog(Game):
                                             jack_actions = self.get_jack_actions(marble, card)
                                             actions.extend(jack_actions)
 
-                                    # Loop through all possible moves for the card
-                                    for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
-                                        new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                                        actions.append(Action(card=card,
-                                                              pos_from=marble.pos,
-                                                              pos_to=new_position))  # Add valid action
+                                    if card.rank != '7': # Loop through all possible moves for the card
+                                        for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
+                                            new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
+                                            actions.append(Action(card = card, pos_from = marble.pos, pos_to = new_position))  # Add valid action
 
-                            if card.rank == '7':
-                                seven_steps_partitions = self.seven_partitions(7)
-                                marbles_available = [m for m in marbles_to_process if m.pos not in kennel_position]
-
-                                for partition in seven_steps_partitions:
-                                    # Try all permutations of marbles for the given partition length
-                                    if len(partition) > len(marbles_available):
-                                        continue
-
-                                    for marble_comb in permutations(marbles_available, len(partition)):
-                                        # Build a sequence of moves
-                                        # For each (marble, steps), pos_to = (marble.pos + steps) % 64
-                                        # Validate after building full sequence
-                                        sequence = []
-                                        valid_sequence = True
-                                        for m_obj, steps in zip(marble_comb, partition):
-                                            pos_from = m_obj.pos
-                                            pos_to = (pos_from + steps) % 64
-                                            sequence.append((pos_from, pos_to))
-
-                                        # Validate full sequence
-                                        if self.validate_full_seven_sequence(sequence):
-                                            # If valid, add a single action with partial_seven_moves
-                                            actions.append(Action(card=card, partial_seven_moves=sequence))
+                # Need a different approach to card 7
+                for card in player.list_card:
+                    if card.rank == '7':
+                        # Need to know number of all marbles outside of kennel
+                        marbles_for_split_cnt = len(marbles_outside_of_kennel)
+                        # Based on that we determine different combinations for card 7
+                        combinations = self.generate_combinations_seven(self.state.seven_steps_left, marbles_for_split_cnt)
+                        # Once I determine all the combinations, I need to create corresponding list of actions
+                        for combination in combinations:
+                            for move in combination:
+                                for marble in marbles_outside_of_kennel:
+                                    pos_from = marble.pos
+                                    new_position = (pos_from + move) % len(Dog.BOARD["common_track"])
+                                    actions.append(Action(card=card, pos_from=pos_from, pos_to=new_position))
 
             if self.state.card_active is not None:
-                self.state.card_active = None
-                player.list_card = player_cards_copy
+                if self.state.seven_steps_left == 7:
+                    self.state.card_active = None
+                    player.list_card = player.list_card_copy
+                    player.list_card_copy = [] # reseting to empty list
 
         # Validation of actions
         validated_actions = []
@@ -398,57 +391,6 @@ class Dog(Game):
             if action.card.rank == 'J':
                 self.exchange_marbles(current_player, action)
 
-            # Integrate card 7 logic:
-            if action.card.rank == '7':
-                # If we're starting the seven moves now, set card_active if it's not already
-                if self.state.card_active is None:
-                    self.state.card_active = action.card
-                    self.seven_steps_used = 0  # track how many steps have been applied
-
-                old_state = deepcopy(self.state)
-                steps_applied = 0
-
-                # If partial_seven_moves is provided, it means these are the steps chosen now.
-                if action.partial_seven_moves:
-                    for (pf, pt) in action.partial_seven_moves:
-                        marble = None
-                        marble_owner = None
-                        for p_idx in [self.state.idx_player_active, (self.state.idx_player_active + 2) % 4]:
-                            for m in self.state.list_player[p_idx].list_marble:
-                                if m.pos == pf:
-                                    marble = m
-                                    marble_owner = self.state.list_player[p_idx]
-                                    break
-                            if marble:
-                                break
-
-                        if not marble or not self.move_marble(marble, action.card, pt, marble_owner):
-                            # revert to old state if move fails
-                            self.state = old_state
-                            print("Error applying seven sequence, reverting.")
-                            return
-
-                        steps_applied += 1
-
-                    # Update how many steps have been completed
-                    self.seven_steps_used += steps_applied
-
-                    # Check if we reached all 7 steps
-                    if self.seven_steps_used == 7:
-                        current_player = self.state.list_player[self.state.idx_player_active]
-                        # Remove the card from the player's hand
-                        if self.state.card_active in current_player.list_card:
-                            current_player.list_card.remove(self.state.card_active)
-                        # Reset card_active and step count
-                        self.state.card_active = None
-                        self.seven_steps_used = 0
-                        # Move to the next player
-                        self.state.idx_player_active = (self.state.idx_player_active + 1) % self.state.cnt_player
-                    else:
-                        # Not all steps done, keep card_active set to the 7 card.
-                        # The player's turn does not end here. They can continue with more partial moves.
-                        pass
-
             elif action.pos_from is not None and action.pos_to is not None:
                 # Check if the action involves a teammate's marble
                 teammate_index = (self.state.idx_player_active + 2) % 4
@@ -459,11 +401,30 @@ class Dog(Game):
                 if marble:
                     # Determine which player the marble belongs to
                     marble_owner = (current_player if marble in current_player.list_marble else teammate)
-                    movement_success = self.move_marble(marble, action.card, action.pos_to, marble_owner)
-                    if movement_success:
-                        print(f"Marble moved from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
+
+                    # Integrate card 7 logic:
+                    if action.card.rank == '7':
+                        self.state.card_active = action.card  # Setting up a card 7 as active
+                        movement_success = self.move_marble(marble, action.card, action.pos_to, marble_owner)
+                        if movement_success:
+                            print(f"Marble moved (card 7) from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
+                            self.state.seven_steps_left -= (action.pos_to - action.pos_from)
+                        else:
+                            print(f"Invalid move (card 7) from {action.pos_from} to {action.pos_to}.")
+
+                        if self.state.seven_steps_left == 0:
+                            self.state.card_active = None
+                            self.state.seven_steps_left = 7
+                            current_player.list_card = current_player.list_card_copy
+                            current_player.list_card_copy = [] # reset the list
+                            self.state.idx_player_active += 1
+
                     else:
-                        print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
+                        movement_success = self.move_marble(marble, action.card, action.pos_to, marble_owner)
+                        if movement_success:
+                            print(f"Marble moved from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
+                        else:
+                            print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
 
 # ---- MARBLES METHODS----
 
@@ -601,50 +562,19 @@ class Dog(Game):
         return True  # No blocking marble is overtaken
 
 # ---- CARDS METHODS ----
-    def seven_partitions(self, n=7):
-        # Return all partitions of n into positive integers (for steps)
-        # Example: seven_partitions() -> [[1,1,1,1,1,1,1],[2,1,1,1,1,1], ...]
-        if n == 0:
-            return [[]]
-        result = []
-        for i in range(1, n + 1):
-            for sub in self.seven_partitions(n - i):
-                result.append([i] + sub)
-        return result
+    def generate_combinations_seven(self, total: int, num_parts: int):
+        """Helper function to generate all possible splits of a total into num_parts non-negative integers."""
+        combinations = []
 
-    def validate_full_seven_sequence(self, sequence: List[Tuple[int, int]]) -> bool:
-        # sequence is a list of (pos_from, pos_to) steps
-        # Clone state
-        old_state = deepcopy(self.state)
-        player = self.state.list_player[self.state.idx_player_active]
+        if num_parts == 1:
+            if total > 0:  # Ensure the value is positive
+                combinations.append([total])
+        else:
+            for i in range(1, total + 1):  # Start from 1 to avoid zeros
+                for tail in self.generate_combinations_seven(total - i, num_parts - 1):
+                    combinations.append([i] + tail)
 
-        for (pf, pt) in sequence:
-            # Find the marble at pf
-            marble = None
-            for p_idx in [self.state.idx_player_active, (self.state.idx_player_active + 2) % 4]:
-                for m in self.state.list_player[p_idx].list_marble:
-                    if m.pos == pf:
-                        marble = m
-                        marble_owner = self.state.list_player[p_idx]
-                        break
-                if marble:
-                    break
-
-            if not marble:
-                # No marble at pos_from, invalid
-                self.state = old_state
-                return False
-
-            # Try to move marble
-            if not self.move_marble(marble, Card(suit='♣', rank='7'), pt, marble_owner):
-                # Restore state and return false
-                self.state = old_state
-                return False
-
-        # If all steps successful, restore old_state (just to not commit partial changes here)
-        # We'll actually apply these when the action is chosen.
-        self.state = old_state
-        return True
+        return combinations
 
     @staticmethod
     def get_joker_actions_later_in_game():
