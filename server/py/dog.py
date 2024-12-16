@@ -449,9 +449,6 @@ class Dog(Game):
         valid_steps = card.get_steps()  # Get the steps allowed for the card
         valid_positions = [(current_pos + step) % len(board["common_track"]) for step in valid_steps]
 
-        if card.rank == "7":
-            return True
-
         # Check if the move is valid
         if pos_to not in valid_positions:
             print(f"Invalid move: position {pos_to} is not reachable using card {card.rank}.")
@@ -575,25 +572,6 @@ class Dog(Game):
         return True  # No blocking marble is overtaken
 
 # ---- CARDS METHODS ----
-    @staticmethod
-    def get_seven_actions(total_steps): # type: ignore
-        """Generate all possible step combinations for card '7' to split between marbles."""
-        def find_partitions(n, max_part): # type: ignore
-            """Helper function to recursively find partitions of n"""
-            if n == 0:
-                yield []
-            for i in range(1, min(n, max_part) + 1):
-                for subpartition in find_partitions(n-i, i):
-                    yield [i] + subpartition
-
-        # Generate all unique partitions of total steps.
-        partitions = list(find_partitions(total_steps, 7))
-
-        # For each partition, create all permutations to represent different move orders
-        all_moves = set()
-        for partition in partitions:
-            all_moves.update(permutations(partition))
-        return sorted(all_moves)
 
     @staticmethod
     def get_joker_actions_later_in_game() -> List[Action]:
