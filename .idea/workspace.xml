@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="dc7aa62a-fd7c-46a9-aaae-5b25f06ef742" name="Changes" comment="" />
+    <list default="true" id="dc7aa62a-fd7c-46a9-aaae-5b25f06ef742" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -42,13 +44,15 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python tests.Python tests in test_dog.py.executor": "Coverage",
     "Python.__init__.executor": "Run",
     "Python.benchmark.executor": "Run",
-    "Python.benchmark_dog.executor": "Run",
+    "Python.benchmark_dog.executor": "Coverage",
     "Python.benchmark_hangman.executor": "Run",
+    "Python.dog.executor": "Run",
     "Python.hangman.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "card-jake",
+    "git-widget-placeholder": "main",
     "last_opened_file_path": "C:/Users/Lenovo/Documents/HSLU_semester_2/devops/DevOps_Dackel_Devs",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -105,10 +109,12 @@
     </option>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$benchmark_dog.coverage" NAME="benchmark_dog Coverage Results" MODIFIED="1733236400758" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/benchmark" />
+    <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$dog.coverage" NAME="dog Coverage Results" MODIFIED="1734271721404" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/server/py" />
+    <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$benchmark_dog.coverage" NAME="benchmark_dog Coverage Results" MODIFIED="1734287376444" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/benchmark" />
     <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$hangman.coverage" NAME="hangman Coverage Results" MODIFIED="1733423869319" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/server/py" />
     <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$benchmark.coverage" NAME="benchmark Coverage Results" MODIFIED="1733221202333" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/benchmark" />
     <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1733229780429" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/.venv/lib/python3.10/site-packages/pydantic_core" />
     <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$benchmark_hangman.coverage" NAME="benchmark_hangman Coverage Results" MODIFIED="1732555715806" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/benchmark" />
+    <SUITE FILE_PATH="coverage/DevOps_Dackel_Devs$.coverage" NAME=" Coverage Results" MODIFIED="1734337073757" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
   </component>
 </project>
