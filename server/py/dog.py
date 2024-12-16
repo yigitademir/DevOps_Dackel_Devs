@@ -224,7 +224,6 @@ class Dog(Game):
         """
         actions = []
         player = self.state.list_player[self.state.idx_player_active]
-        common_track = Dog.BOARD["common_track"]
         start_position = Dog.BOARD["starts"][self.state.idx_player_active]
         kennel_position = Dog.BOARD["kennels"][self.state.idx_player_active]
         finish_position = Dog.BOARD["finishes"][self.state.idx_player_active]
@@ -260,7 +259,7 @@ class Dog(Game):
 
                     # Check for self-block on start position
                     if any(marble.pos == start_position and marble.is_save for marble in marbles_to_process):
-                        print("Self-block detected at start position. Exiting.")
+                        print("Self-block detected at start position. No start action possible.")
                         break  # Exit the first `if` condition
 
                     # Create a list of start cards (e.g., Ace, King, Joker)
@@ -334,8 +333,8 @@ class Dog(Game):
                                     new_position = (pos_from + move) % len(Dog.BOARD["common_track"])
                                     actions.append(Action(card=card, pos_from=pos_from, pos_to=new_position))
                                     # Loop through all possible moves for the card
-                                    for move in Dog.RANK_ACTIONS[card.rank].get("moves", []): # type: ignore
-                                        new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
+                                    for submove in Dog.RANK_ACTIONS[card.rank].get("moves", []): # type: ignore
+                                        new_position = (marble.pos + submove) % len(Dog.BOARD["common_track"])
                                         actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
 
             if self.state.card_active is not None:
@@ -446,30 +445,6 @@ class Dog(Game):
                             print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
 
 # ---- MARBLES METHODS ----
-
-    def send_back_home_overtook_by_seven(self, action, marble):
-        """Sends opponent marbles in the specified range back to their respective kennels."""
-        range_start = action.pos_from
-        range_end = action.pos_to
-
-        # Iterate through all marbles in the common track
-        for player in self.state.list_player:
-            for m in player.list_marble:  # Loop through marbles
-                if m == marble:  # Exclude the specified marble
-                    continue
-                if range_start <= m.pos <= range_end:
-                    # Get the kennel positions for the owner of this marble
-                    player_index = self.state.list_player.index(player)
-                    kennel_positions = Dog.BOARD["kennels"][player_index]
-
-                    # Find the first empty slot in the opponent's kennel
-                    for kennel_pos in kennel_positions:
-                        if not any(
-                                existing_marble.pos == kennel_pos for p in self.state.list_player for existing_marble in
-                                p.list_marble):
-                            # Send the marble to the first empty kennel slot
-                            m.pos = kennel_pos
-                            break  # Exit the loop once the marble is placed
 
     def move_marble(self, marble: Marble, card: Card, pos_to: int, player: PlayerState) -> bool:
         """
@@ -621,6 +596,30 @@ class Dog(Game):
                             return False
 
         return True  # No blocking marble is overtaken
+
+    def send_back_home_overtook_by_seven(self, action, marble):
+        """Sends opponent marbles in the specified range back to their respective kennels."""
+        range_start = action.pos_from
+        range_end = action.pos_to
+
+        # Iterate through all marbles in the common track
+        for player in self.state.list_player:
+            for m in player.list_marble:  # Loop through marbles
+                if m == marble:  # Exclude the specified marble
+                    continue
+                if range_start <= m.pos <= range_end:
+                    # Get the kennel positions for the owner of this marble
+                    player_index = self.state.list_player.index(player)
+                    kennel_positions = Dog.BOARD["kennels"][player_index]
+
+                    # Find the first empty slot in the opponent's kennel
+                    for kennel_pos in kennel_positions:
+                        if not any(
+                                existing_marble.pos == kennel_pos for p in self.state.list_player for existing_marble in
+                                p.list_marble):
+                            # Send the marble to the first empty kennel slot
+                            m.pos = kennel_pos
+                            break  # Exit the loop once the marble is placed
 
 # ---- CARDS METHODS ----
     def generate_combinations_seven(self, total: int, num_parts: int):
