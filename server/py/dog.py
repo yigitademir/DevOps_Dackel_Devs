@@ -362,7 +362,8 @@ class Dog(Game):
 
                     # Print for debugging
                     print(
-                        f"Player {current_player.name} swapped a JOKER for {action.card_swap.rank}{action.card_swap.suit}.") # pylint: disable=line-too-long
+                        f"Player {current_player.name} swapped a JOKER for {action.card_swap.rank}"
+                        f"{action.card_swap.suit}.") # pylint: disable=line-too-long
                 else:
                     # Handle cases where the player doesn't have exactly two JOKER cards
                     print("Player does not have exactly two JOKER cards.")
@@ -376,7 +377,8 @@ class Dog(Game):
                 teammate_index = (self.state.idx_player_active + 2) % 4
                 teammate = self.state.list_player[teammate_index]
 
-                marble = next((m for m in current_player.list_marble + teammate.list_marble if m.pos == action.pos_from), None) # pylint: disable=line-too-long
+                marble = next((m for m in current_player.list_marble + teammate.list_marble
+                               if m.pos == action.pos_from), None) # pylint: disable=line-too-long
 
                 if marble:
                     # Determine which player the marble belongs to
@@ -495,7 +497,8 @@ class Dog(Game):
                         if all(m.pos != pos for m in other_player.list_marble)
                     ]
                     other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
-                    print(f"Collision! {other_player.name}'s marble sent back to kennel at position {other_marble.pos}.") # pylint: disable=line-too-long
+                    print(f"Collision! {other_player.name}'s marble sent back to kennel at position "
+                          f"{other_marble.pos}.") # pylint: disable=line-too-long
                     return True
         return True
 
@@ -623,7 +626,8 @@ class Dog(Game):
     def end_start_round(self):
         """End the current round and prepare for the next."""
         self.state.cnt_round += 1
-        self.state.idx_player_active = (self.state.idx_player_started + self.state.cnt_round - 1) % self.state.cnt_player # pylint: disable=line-too-long
+        self.state.idx_player_active = ((self.state.idx_player_started + self.state.cnt_round - 1)
+                                        % self.state.cnt_player) # pylint: disable=line-too-long
         # self.state.idx_player_active = self.state.idx_player_started
         self.deal_cards_to_players()
         self.state.bool_card_exchanged = False # set exchange to false for all players
