@@ -314,6 +314,15 @@ class Dog(Game):
                                                 if 0 < steps_passed_start <= 4:
                                                     endzone_position = finish_position[steps_passed_start - 1]
                                                     actions.append(Action(card=card, pos_from = marble.pos, pos_to = endzone_position))  # Action to move to finish
+                                       
+                                       # Actions for Marble in the finish position
+                                        if marble.pos in finish_position:
+                                            idx_finish = finish_position.index(marble.pos)
+                                            max_moves = 3 - idx_finish
+                                            if move <= max_moves:
+                                                endzone_position = marble.pos + move
+                                                actions.append(Action(card=card, pos_from = marble.pos, pos_to = endzone_position))
+                                    
 
             if self.state.card_active is not None:
                 self.state.card_active = None
@@ -341,6 +350,7 @@ class Dog(Game):
         """
 
         current_player = self.state.list_player[self.state.idx_player_active]
+        
 
         if action is None:
             # No valid actions, discard all cards
@@ -374,7 +384,7 @@ class Dog(Game):
                     if movement_success:
                         print(f"Marble moved from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
                     else:
-                        print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
+                        print(f"a:Invalid move from {action.pos_from} to {action.pos_to}.")
 
             if action.card.rank == "J":
                 self.exchange_marbles(current_player, action)
@@ -416,7 +426,7 @@ class Dog(Game):
                     if movement_success:
                         print(f"Marble moved from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
                     else:
-                        print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
+                        print(f"b:Invalid move from {action.pos_from} to {action.pos_to}.")
 
 # ---- MARBLES METHODS----
 
@@ -428,6 +438,7 @@ class Dog(Game):
         """
         board = Dog.BOARD
         current_pos = marble.pos
+        finish_position = Dog.BOARD["finishes"][self.state.idx_player_active]
 
         # Moving out of kennel
         kennel_positions = board["kennels"][self.state.idx_player_active]
@@ -448,29 +459,22 @@ class Dog(Game):
         # Determine valid positions based on steps.
         valid_steps = card.get_steps()  # Get the steps allowed for the card
         valid_positions = [(current_pos + step) % len(board["common_track"]) for step in valid_steps]
+        if not marble.is_save:
+            valid_positions += finish_position
 
         if card.rank == "7":
             return True
 
         # Check if the move is valid
         if pos_to not in valid_positions:
-            print(f"Invalid move: position {pos_to} is not reachable using card {card.rank}.")
+            print(f"c:Invalid move: position {pos_to} is not reachable using card {card.rank}. Valid: {valid_positions}")
             return False
 
         # Handle collision
         collision_resolved = self.handle_collision(pos_to)
         if not collision_resolved:
             return False
-
-        # Handle finishing line rules
-        finish_positions = board["finishes"][self.state.list_player.index(player)]
-        if marble.pos in finish_positions and pos_to in finish_positions:
-            # Ensure no overtaking inside the finish line
-            if pos_to > max(m.pos for m in player.list_marble if m.pos in finish_positions):
-                print(f"Invalid move: cannot overtake within the finish line to position {pos_to}.")
-                return False
-
-        # Move the marble
+        
         marble.pos = pos_to
         return True
 
