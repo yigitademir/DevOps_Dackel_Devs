@@ -474,8 +474,7 @@ class Dog(Game):
         collision_resolved = self.handle_collision(pos_to)
         if not collision_resolved:
             return False
-
-        # Move the marble
+        
         marble.pos = pos_to
         return True
 
