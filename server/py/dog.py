@@ -104,6 +104,7 @@ class GameState(BaseModel):
     phase: GamePhase                   # current phase of the game
     cnt_round: int                     # current round
     bool_card_exchanged: bool          # true if cards was exchanged in round
+    selected_cards: Dict[int, Any]
     idx_player_started: int            # index of player that started the round
     idx_player_active: int             # index of active player in round
     list_player: List[PlayerState]     # list of players
@@ -156,6 +157,7 @@ class Dog(Game):
             phase = GamePhase.RUNNING, # Transition directly to RUNNING phase
             cnt_round = 1,             # First round
             bool_card_exchanged = False,
+            selected_cards = {},
             idx_player_started = 0,    # Default starting player index - will assign random value below
             idx_player_active = 0,     # Same as idx_player_started initially
             list_card_draw = [],       # Will populate below
@@ -227,11 +229,9 @@ class Dog(Game):
         list_suit: List[str] = ['♠', '♥', '♦', '♣']
 
         if not self.state.bool_card_exchanged:
-            seen_cards = set()
-            for card in player.list_card:
-                if card not in seen_cards:  # Avoid adding duplicate cards
+            for card in set(player.list_card):    # Avoid adding duplicate cards
                     actions.append(Action(card=card, pos_from=None, pos_to=None))
-                    seen_cards.add(card)
+
         else:
             if self.state.card_active is not None: # if card active is defined I need to get actions only for this card
                 player_cards_copy = player.list_card.copy()
@@ -304,9 +304,16 @@ class Dog(Game):
                                     # Loop through all possible moves for the card
                                     for move in Dog.RANK_ACTIONS[card.rank].get("moves", []): # type: ignore
                                         new_position = (marble.pos + move) % len(Dog.BOARD["common_track"])
-                                        actions.append(Action(card=card,
-                                                              pos_from=marble.pos,
-                                                              pos_to=new_position))  # Add valid action
+                                        actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+       
+                                
+                                        # Check if the marble has passed its start position and if it's eligible to move to the finish
+                                        if not marble.is_save:                                     # Passed start
+                                            if (new_position-move) <= start_position < new_position:  # would move over or from startposition
+                                                steps_passed_start = (new_position - start_position)
+                                                if 0 < steps_passed_start <= 4:
+                                                    endzone_position = finish_position[steps_passed_start - 1]
+                                                    actions.append(Action(card=card, pos_from = marble.pos, pos_to = endzone_position))  # Action to move to finish
 
             if self.state.card_active is not None:
                 self.state.card_active = None
@@ -350,6 +357,28 @@ class Dog(Game):
                 self.end_start_round()
 
         else:
+            if action.pos_from is None and action.pos_to is None:
+                self.exchange_cards(action)
+
+            elif action.pos_from is not None and action.pos_to is not None:
+                # Check if the action involves a teammate's marble
+                teammate_index = (self.state.idx_player_active + 2) % 4
+                teammate = self.state.list_player[teammate_index]
+
+                marble = next((m for m in current_player.list_marble + teammate.list_marble if m.pos == action.pos_from), None)
+
+                if marble:
+                    # Determine which player the marble belongs to
+                    marble_owner = (current_player if marble in current_player.list_marble else teammate)
+                    movement_success = self.move_marble(marble, action.card, action.pos_to, marble_owner)
+                    if movement_success:
+                        print(f"Marble moved from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
+                    else:
+                        print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
+
+            if action.card.rank == "J":
+                self.exchange_marbles(current_player, action)
+
             # Handle card swapping (e.g., with a Joker). Test 28
             if action.card.rank == "JKR" and action.card_swap is not None:
                 # Check if the player has exactly two JOKER cards
@@ -419,9 +448,6 @@ class Dog(Game):
         # Determine valid positions based on steps.
         valid_steps = card.get_steps()  # Get the steps allowed for the card
         valid_positions = [(current_pos + step) % len(board["common_track"]) for step in valid_steps]
-
-        if card.rank == "7":
-            return True
 
         # Check if the move is valid
         if pos_to not in valid_positions:
@@ -525,6 +551,7 @@ class Dog(Game):
 
     def is_overtaking_save_marble(self, action: Action) -> bool:
         """Checks if actions are not overtaking a blocking marble, but allows swapping own marbles in a safe state."""
+        start_position = Dog.BOARD["starts"][self.state.idx_player_active]
         for player in self.state.list_player:
             if player != self.state.list_player[self.state.idx_player_active]:  # Check opponents only
                 for marble in player.list_marble:
@@ -533,29 +560,18 @@ class Dog(Game):
                             action.pos_to is not None and
                             action.pos_from < marble.pos <= action.pos_to):
                             return False  # Action overtakes a blocking marble
+            else:
+                for marble in player.list_marble:
+                    if marble.is_save:
+                        if(action.pos_from is not None and
+                            action.pos_to is not None and
+                            action.pos_from < start_position <= action.pos_to):
+                            print("save")
+                            return False
 
         return True  # No blocking marble is overtaken
 
 # ---- CARDS METHODS ----
-    @staticmethod
-    def get_seven_actions(total_steps): # type: ignore
-        """Generate all possible step combinations for card '7' to split between marbles."""
-        def find_partitions(n, max_part): # type: ignore
-            """Helper function to recursively find partitions of n"""
-            if n == 0:
-                yield []
-            for i in range(1, min(n, max_part) + 1):
-                for subpartition in find_partitions(n-i, i):
-                    yield [i] + subpartition
-
-        # Generate all unique partitions of total steps.
-        partitions = list(find_partitions(total_steps, 7))
-
-        # For each partition, create all permutations to represent different move orders
-        all_moves = set()
-        for partition in partitions:
-            all_moves.update(permutations(partition))
-        return sorted(all_moves)
 
     @staticmethod
     def get_joker_actions_later_in_game() -> List[Action]:
@@ -614,6 +630,63 @@ class Dog(Game):
             jack_actions.append(Action(card=card, pos_from=pos_to, pos_to=pos_from, card_swap=None))
 
         return jack_actions
+    
+    def exchange_cards(self, action: Action) -> None:
+        """
+        Facilitates a card selection for exchange. The cards are only exchanged after all players have chosen.
+        
+        Args:
+            action (Action): Action containing the card to exchange.
+        """
+        # Check if cards have already been exchanged
+        if self.state.bool_card_exchanged:
+            print("Cards have already been exchanged this round.")
+            return
+
+        # Identify current player
+        current_player = self.state.list_player[self.state.idx_player_active]
+
+        # Ensure the current player hasn't already selected a card
+        if self.state.selected_cards.get(self.state.idx_player_active):
+            print(f"{current_player.name} has already chosen a card.")
+            return
+
+        # Validate that the card is in the current player's hand
+        if action.card not in current_player.list_card:
+            print(f"Error: Card {action.card} is not in {current_player.name}'s hand.")
+            return
+
+        # Store the selected card and remove it from the player's hand
+        print(f"{current_player.name} selects {action.card} for exchange.")
+        self.state.selected_cards[self.state.idx_player_active] = action.card
+        current_player.list_card.remove(action.card)
+
+        # Advance to the next player
+        self.state.idx_player_active = (self.state.idx_player_active + 1) % self.state.cnt_player
+
+        # Check if all players have selected their cards
+        if len(self.state.selected_cards) == self.state.cnt_player:
+            self._finalize_card_exchange()
+
+    def _finalize_card_exchange(self) -> None:
+        """
+        Finalizes the card exchange once all players have chosen their cards.
+        """
+        print("All players have selected their cards. Performing the exchange...")
+
+        # Exchange cards based on selections
+        for idx_player in range(self.state.cnt_player):
+            idx_partner = (idx_player + 2) % self.state.cnt_player  # Partner index
+            partner_player = self.state.list_player[idx_partner]
+            card = self.state.selected_cards[idx_player]  # Card chosen by current player
+
+            # Add the card to the partner's hand
+            partner_player.list_card.append(card)
+
+        # Clear selected cards and set exchange flag
+        self.state.selected_cards.clear()
+        self.state.bool_card_exchanged = True
+        print("Card exchange completed.")
 
 # ---- GAMEPLAY METHODS----
 
@@ -681,6 +754,7 @@ class Dog(Game):
                     raise RuntimeError("Deck is unexpectedly empty during card dealing.")
 
         print(f"Starting Round {self.state.cnt_round}")
+
 
     @staticmethod
     def is_duplicated_action(action_to_check: Any, validated_actions: Any) -> bool:
