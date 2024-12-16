@@ -385,25 +385,6 @@ class Dog(Game):
             if action.pos_from is None and action.pos_to is None:
                 self.exchange_cards(action)
 
-            # elif action.pos_from is not None and action.pos_to is not None:
-            #     # Check if the action involves a teammate's marble
-            #     teammate_index = (self.state.idx_player_active + 2) % 4
-            #     teammate = self.state.list_player[teammate_index]
-            #
-            #     marble = next((m for m in current_player.list_marble + teammate.list_marble if m.pos == action.pos_from), None)
-            #
-            #     if marble:
-            #         # Determine which player the marble belongs to
-            #         marble_owner = (current_player if marble in current_player.list_marble else teammate)
-            #         movement_success = self.move_marble(marble, action.card, action.pos_to, marble_owner)
-            #         if movement_success:
-            #             print(f"Marble moved from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
-            #         else:
-            #             print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
-            #
-            # if action.card.rank == "J":
-            #     self.exchange_marbles(current_player, action)
-            #
             # Handle card swapping (e.g., with a Joker). Test 28
             if action.card.rank == "JKR" and action.card_swap is not None:
                 # Check if the player has exactly two JOKER cards
@@ -446,6 +427,7 @@ class Dog(Game):
                         if movement_success:
                             print(f"Marble moved (card 7) from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
                             self.state.seven_steps_left -= (action.pos_to - action.pos_from)
+                            self.send_back_home_overtook_by_seven(action, marble)
                         else:
                             print(f"Invalid move (card 7) from {action.pos_from} to {action.pos_to}.")
 
@@ -463,7 +445,31 @@ class Dog(Game):
                         else:
                             print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
 
-# ---- MARBLES METHODS----
+# ---- MARBLES METHODS ----
+
+    def send_back_home_overtook_by_seven(self, action, marble):
+        """Sends opponent marbles in the specified range back to their respective kennels."""
+        range_start = action.pos_from
+        range_end = action.pos_to
+
+        # Iterate through all marbles in the common track
+        for player in self.state.list_player:
+            for m in player.list_marble:  # Loop through marbles
+                if m == marble:  # Exclude the specified marble
+                    continue
+                if range_start <= m.pos <= range_end:
+                    # Get the kennel positions for the owner of this marble
+                    player_index = self.state.list_player.index(player)
+                    kennel_positions = Dog.BOARD["kennels"][player_index]
+
+                    # Find the first empty slot in the opponent's kennel
+                    for kennel_pos in kennel_positions:
+                        if not any(
+                                existing_marble.pos == kennel_pos for p in self.state.list_player for existing_marble in
+                                p.list_marble):
+                            # Send the marble to the first empty kennel slot
+                            m.pos = kennel_pos
+                            break  # Exit the loop once the marble is placed
 
     def move_marble(self, marble: Marble, card: Card, pos_to: int, player: PlayerState) -> bool:
         """
