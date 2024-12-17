@@ -481,14 +481,16 @@ class Dog(Game):
         """
         board = Dog.BOARD
         current_pos = marble.pos
-
-        # Moving out of kennel
         kennel_positions = board["kennels"][self.state.idx_player_active]
         start_position = board["starts"][self.state.idx_player_active]
+        finish_positions = board["finishes"][self.state.list_player.index(player)]
+
+        # Moving out of kennel
         if marble.pos in kennel_positions and pos_to == start_position:
             if not self.handle_collision(pos_to):
                 return False
             marble.is_save = True
+            marble.passed_start += 1
             print(f"Marble moved to start position {pos_to} and is now safe.")
             marble.pos = pos_to
             return True
@@ -498,31 +500,27 @@ class Dog(Game):
             marble.is_save = False
             print("Marble moved out of start position and is no longer safe.")
 
-        # Determine valid positions based on steps.
-        valid_steps = card.get_steps()  # Get the steps allowed for the card
-        valid_positions = [(current_pos + step) % len(board["common_track"]) for step in valid_steps]
-
-        # Check if the move is valid
-        if pos_to not in valid_positions:
-            print(f"Invalid move: position {pos_to} is not reachable using card {card.rank}.")
+        # Movement into finish area
+        if marble.passed_start >= 2 and pos_to in finish_positions:
+            idx_from = finish_positions.index(current_pos)
+            idx_to = finish_positions.index(pos_to)
+            if idx_to > idx_from and self.validate_no_overtaking_in_finish(Action(card,current_pos,pos_to)):
+                marble.pos = pos_to
+                print(f"Marble moved within the finish to position {pos_to}.")
+                return True
+            print("Invalid move within the finish area.")
             return False
 
-        # Handle collision
-        collision_resolved = self.handle_collision(pos_to)
-        if not collision_resolved:
-            return False
+        # Common track movement
+        valid_steps = card.get_steps()
+        for step in valid_steps:
+            new_pos = (current_pos + step) % len(board["common_track"])
+            if pos_to == new_pos and self.handle_collision(pos_to):
+                marble.pos = pos_to
+                return True
 
-        # Handle finishing line rules
-        finish_positions = board["finishes"][self.state.list_player.index(player)]
-        if marble.pos in finish_positions and pos_to in finish_positions:
-            # Ensure no overtaking inside the finish line
-            if pos_to > max(m.pos for m in player.list_marble if m.pos in finish_positions):
-                print(f"Invalid move: cannot overtake within the finish line to position {pos_to}.")
-                return False
-
-        # Just update the marble's position
-        marble.pos = pos_to
-        return True
+        print(f"Invalid move: position {pos_to} is not reachable using card {card.rank}.")
+        return False
 
     def exchange_marbles(self, current_player: PlayerState, action: Action) -> None:
         """
