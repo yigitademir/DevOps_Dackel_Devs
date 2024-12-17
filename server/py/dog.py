@@ -215,7 +215,7 @@ class Dog(Game):
         print(f"card_active: {self.state.card_active if self.state.card_active else None}")
 
     def get_player_view(self, idx_player: int) -> GameState: # type: ignore
-        """ Get the masked state for the active player (e.g. the oppontent's cards are face down)"""
+        """ Get the masked state for the active player (e.g. the opponent's cards are face down)"""
         pass
 
     def get_list_action(self) -> List[Action]:
@@ -260,10 +260,11 @@ class Dog(Game):
             for _ in [0]: # dummy loop to handle exit when start position is blocked
                 if any(marble.pos in kennel_position for marble in marbles_to_process):
 
-                    # Check for self-block on start position
-                    if any(marble.pos == start_position and marble.is_save for marble in marbles_to_process):
+                    # Self-block detection at the start position
+                    self_block = any(marble.pos == start_position and marble.is_save for marble in marbles_to_process)
+                    if self_block:
                         print("Self-block detected at start position. No start action possible.")
-                        break  # Exit the first `if` condition
+                        break
 
                     # Create a list of start cards (e.g., Ace, King, Joker)
                     start_cards = [card for card in player.list_card if card.rank in ["A", "K", "JKR"]]
@@ -314,13 +315,23 @@ class Dog(Game):
 
                                             # Check if the marble has passed its start position and if it's eligible to move to the finish
                                             endzone_position = None  # Initialize variable safely
-                                            if not marble.is_save:  # Passed start
-                                                if (new_position - move) <= start_position < new_position:  # would move over or from start position
-                                                    steps_passed_start = (new_position - start_position)
-                                                    if 0 < steps_passed_start <= 4:
-                                                        endzone_position = finish_position[steps_passed_start - 1]
-                                                        actions.append(Action(card=card, pos_from=marble.pos,
-                                                                              pos_to=endzone_position))  # Action to move to finish
+                                            distance_from_start = new_position - start_position
+
+                                            # Normalize distance
+                                            if distance_from_start < 0:
+                                                distance_from_start += len(Dog.BOARD["common_track"])
+
+                                            # If is_save = True don't generate finish actions
+                                            if marble.pos == start_position and marble.is_save:
+                                                continue
+
+                                            # If the marble end
+                                            if 1 <= distance_from_start <= 4:
+                                                endzone_position = finish_position[distance_from_start - 1]
+                                                # Only generate finish actions if is_save=False and passed_start >=2
+                                                if not marble.is_save:
+                                                    actions.append(
+                                                        Action(card=card, pos_from=marble.pos, pos_to=endzone_position))
 
                                             # Actions for Marble in the finish
                                             if marble.pos in finish_position:
@@ -483,14 +494,14 @@ class Dog(Game):
         current_pos = marble.pos
         kennel_positions = board["kennels"][self.state.idx_player_active]
         start_position = board["starts"][self.state.idx_player_active]
-        finish_positions = board["finishes"][self.state.list_player.index(player)]
+        finish_positions = board["finishes"][self.state.idx_player_active]
 
         # Moving out of kennel
         if marble.pos in kennel_positions and pos_to == start_position:
             if not self.handle_collision(pos_to):
                 return False
             marble.is_save = True
-            marble.passed_start += 1
+            marble.passed_start = 1
             print(f"Marble moved to start position {pos_to} and is now safe.")
             marble.pos = pos_to
             return True
@@ -498,29 +509,47 @@ class Dog(Game):
         # Reset is_save after move away from start position
         if marble.pos == start_position and pos_to != start_position:
             marble.is_save = False
+            marble.passed_start += 1
             print("Marble moved out of start position and is no longer safe.")
 
-        # Movement into finish area
-        if marble.passed_start >= 2 and pos_to in finish_positions:
-            idx_from = finish_positions.index(current_pos)
-            idx_to = finish_positions.index(pos_to)
-            if idx_to > idx_from and self.validate_no_overtaking_in_finish(Action(card,current_pos,pos_to)):
-                marble.pos = pos_to
-                print(f"Marble moved within the finish to position {pos_to}.")
-                return True
-            print("Invalid move within the finish area.")
-            return False
 
-        # Common track movement
         valid_steps = card.get_steps()
-        for step in valid_steps:
-            new_pos = (current_pos + step) % len(board["common_track"])
-            if pos_to == new_pos and self.handle_collision(pos_to):
-                marble.pos = pos_to
-                return True
 
-        print(f"Invalid move: position {pos_to} is not reachable using card {card.rank}.")
-        return False
+        # Check if the target position is in the finish area
+        if pos_to in finish_positions:
+                if marble.is_save:
+                    print("Cannot move into finish: Marble is in a safe state.")
+                    return False
+
+               # if marble.passed_start < 2:
+                #    print("Cannot move into finish: Marble has not passed the start twice.")
+                 #   return False
+
+                # Calculate how many steps to reach this finish slot from start
+                finish_index = finish_positions.index(pos_to)  # 0-based index of the finish slot
+                steps_needed = finish_index + 1  # 1-based steps (1 to 4)
+
+                # Check if the card supports exactly these steps
+                if steps_needed in valid_steps:
+                    # Move directly into finish based on exact steps match
+                    marble.pos = pos_to
+                    print(f"Marble moved into finish (pos={pos_to}) using {steps_needed} step(s). {marble.passed_start}")
+                    return True
+        else:
+            # Common track movement
+            for step in valid_steps:
+                new_pos = (current_pos + step) % len(board["common_track"])
+                if pos_to == new_pos and self.handle_collision(pos_to):
+                    marble.pos = pos_to
+                    # Check for passing the start position
+                    if current_pos != start_position:
+                        if current_pos < start_position <= pos_to or (current_pos > start_position > pos_to):
+                            marble.passed_start += 1
+                            print(f"Marble crossed the start position. passed_start = {marble.passed_start}")
+                    return True
+
+            print(f"Invalid move: position {pos_to} is not reachable using card {card.rank}.")
+            return False
 
     def exchange_marbles(self, current_player: PlayerState, action: Action) -> None:
         """
