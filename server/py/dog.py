@@ -313,6 +313,7 @@ class Dog(Game):
                                             actions.append(Action(card = card, pos_from = marble.pos, pos_to = new_position))  # Add valid action
 
                                             # Check if the marble has passed its start position and if it's eligible to move to the finish
+                                            endzone_position = None  # Initialize variable safely
                                             if not marble.is_save:  # Passed start
                                                 if (new_position - move) <= start_position < new_position:  # would move over or from start position
                                                     steps_passed_start = (new_position - start_position)
@@ -326,7 +327,9 @@ class Dog(Game):
                                                 idx_finish = finish_position.index(marble.pos)
                                                 max_moves = 3 - idx_finish
                                                 if move <= max_moves:
-                                                    endzone_position
+                                                    if endzone_position is not None:  # Ensure endzone_position is defined
+                                                        actions.append(Action(card=card, pos_from=marble.pos,
+                                                                              pos_to=endzone_position))  # Move in finish
                 for card in player.list_card:
                     if card.rank == '7':
                         # Need to know number of all marbles outside of kennel
