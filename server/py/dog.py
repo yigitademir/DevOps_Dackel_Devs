@@ -468,6 +468,9 @@ class Dog(Game):
                         else:
                             print(f"Invalid move from {action.pos_from} to {action.pos_to}.")
 
+        # Check if the game has ended after applying the action
+        self.check_game_end()
+
 # ---- MARBLES METHODS ----
 
     def move_marble(self, marble: Marble, card: Card, pos_to: int, player: PlayerState) -> bool:
