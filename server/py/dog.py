@@ -327,7 +327,6 @@ class Dog(Game):
                                                 max_moves = 3 - idx_finish
                                                 if move <= max_moves:
                                                     endzone_position
-
                 for card in player.list_card:
                     if card.rank == '7':
                         # Need to know number of all marbles outside of kennel
@@ -345,7 +344,6 @@ class Dog(Game):
                                     for submove in Dog.RANK_ACTIONS[card.rank].get("moves", []): # type: ignore
                                         new_position = (marble.pos + submove) % len(Dog.BOARD["common_track"])
                                         actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
-
         # Validation of actions
         validated_actions: List[Action] = []
 
@@ -459,12 +457,6 @@ class Dog(Game):
                             current_player.list_card = current_player.list_card_copy
                             current_player.list_card_copy = [] # reset the list
                             self.state.idx_player_active += 1
-
-                        # # if not all steps can be played we return to the state before the card was played
-                        # if not self.get_list_action() and self.state.seven_steps_left > 0:
-                        #     self.state = self.state.saved_state
-                        #     self.state.card_active = None
-                        #     self.state.seven_steps_left = 7
 
                     else:
                         movement_success = self.move_marble(marble, action.card, action.pos_to, marble_owner)

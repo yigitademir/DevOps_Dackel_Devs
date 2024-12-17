@@ -472,6 +472,107 @@ class TestDogGame:
 
             assert is_swapped
 
+    def test_move_with_SEVEN_multiple_steps_5(self):
+        """Test 033: Test move with card SEVEN and can not play all steps [10 point]"""
+
+        list_steps = [1, 2, 3]
+        list_card = [Card(suit='♣', rank='7'), Card(suit='♦', rank='7'), Card(suit='♥', rank='7'), Card(suit='♠', rank='7')]
+
+        for card in list_card:
+
+            game = Dog()
+            state = game.get_state()
+
+            pos_blocked = 16
+            pos_from = pos_blocked - sum(list_steps[:-1]) - 1
+            idx_player_active = 0
+            game.state.cnt_round = 0
+            game.state.idx_player_started = idx_player_active
+            game.state.idx_player_active = idx_player_active
+            game.state.bool_card_exchanged = True
+            player = game.state.list_player[idx_player_active]
+            player.list_card = [card]
+            marble = player.list_marble[0]
+            marble.pos = pos_from
+            marble.is_save = False
+            player = state.list_player[idx_player_active + 1]
+            marble = player.list_marble[0]
+            marble.pos = pos_blocked
+            marble.is_save = True
+            marble = player.list_marble[1]
+            marble.pos = pos_blocked - 1
+            marble.is_save = False
+            game.set_state(state)
+
+            for i, steps in enumerate(list_steps):
+
+                if i < len(list_steps) - 1:  # before last step
+                    pos_to = (pos_from + steps + self.CNT_STEPS) % self.CNT_STEPS
+                    action = Action(card=card, pos_from=pos_from, pos_to=pos_to)
+                    game.apply_action(action)
+                else:  # last step
+                    list_action_found = game.get_list_action()
+
+                    assert len(list_action_found) == 0
+
+                    game.apply_action(None)
+
+                    state = game.get_state()
+
+                    # assert game state is reset
+
+                    assert game.state.card_active is None
+
+                pos_from = pos_to
+
+    def test_move_with_SEVEN_multiple_steps_3(self):
+        """Test 031: Test move with card SEVEN and kick out oponents [1 point]"""
+
+        list_steps = [1, 2, 3, 4, 5, 6, 7]
+        list_card = [Card(suit='♣', rank='7'), Card(suit='♦', rank='7'), Card(suit='♥', rank='7'), Card(suit='♠', rank='7')]
+
+        for card in list_card:
+
+            for steps in list_steps:
+
+                game = Dog()
+                state = game.get_state()
+
+                pos_from = 0
+                pos_oponent = pos_from + steps - 1 if steps > 1 else pos_from + 1
+                idx_player_active = 0
+                game.state.cnt_round = 0
+                game.state.idx_player_started = idx_player_active
+                game.state.idx_player_active = idx_player_active
+                game.state.bool_card_exchanged = True
+                player = game.state.list_player[idx_player_active]
+                player.list_card = [card]
+                marble = player.list_marble[0]
+                marble.pos = pos_from
+                marble.is_save = True
+                player = state.list_player[idx_player_active + 1]
+                player.list_card = [Card(suit='♥', rank='K')]
+                marble = player.list_marble[0]
+                marble.pos = pos_oponent
+                marble.is_save = False
+                game.set_state(state)
+
+                pos_to = (pos_from + steps + self.CNT_STEPS) % self.CNT_STEPS
+                action = Action(card=card, pos_from=pos_from, pos_to=pos_to)
+                game.apply_action(action)
+
+                state = game.get_state()
+
+                player = state.list_player[idx_player_active]
+                found = self.get_idx_marble(player=player, pos=pos_to) != -1
+                assert found
+
+                pos_from = pos_oponent
+                pos_to = 72
+                player = state.list_player[idx_player_active + 1]
+                found = self.get_idx_marble(player=player, pos=pos_to) != -1
+                assert found
+
 # --- Helper functions --------
 
     def get_idx_marble(self, player: PlayerState, pos: int) -> int:
