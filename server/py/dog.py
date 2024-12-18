@@ -613,12 +613,26 @@ class Dog(Game):
                             return False  # Action overtakes a blocking marble
             else:
                 for marble in player.list_marble:
-                    if marble.is_save:
+                    if marble.is_save and marble.pos != 0:
+                        print(action.pos_from, start_position, action.pos_to)
                         if(action.pos_from is not None and
                             action.pos_to is not None and
                             action.pos_from < start_position <= action.pos_to):
                             print("Invalid move - overtaking own save marble")
                             return False
+                        
+                    elif marble.is_save and marble.pos == 0:
+                        if (action.pos_from != 0 and
+                            action.pos_from is not None and
+                            action.pos_to is not None):
+                            print("save on 0", action.pos_from, start_position, action.pos_to)
+                            relative_pos_from = action.pos_from - 64
+                            if(action.pos_from is not None and
+                                action.pos_to is not None and
+                                relative_pos_from < start_position <= action.pos_to):
+                                print("Invalid move - overtaking own save marble")
+                                return False
+
 
         return True  # No blocking marble is overtaken
 
