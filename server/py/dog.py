@@ -322,13 +322,14 @@ class Dog(Game):
                                                         actions.append(Action(card=card, pos_from=marble.pos,
                                                                               pos_to=endzone_position))  # Action to move to finish
 
-                                            # Actions for Marble in the finish
-                                            if marble.pos in finish_position:
-                                                idx_finish = finish_position.index(marble.pos)
-                                                max_moves = 3 - idx_finish
-                                                if move <= max_moves:
-                                                    if endzone_position is not None:  # Ensure endzone_position is defined
-                                                        actions.append(Action(card=card, pos_from=marble.pos,
+                                # Actions for Marble in the finish
+                                if marble.pos in finish_position:
+                                    for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
+                                        idx_finish = finish_position.index(marble.pos)
+                                        max_moves = 3 - idx_finish
+                                        if move <= max_moves:
+                                            endzone_position = marble.pos + move  
+                                            actions.append(Action(card=card, pos_from=marble.pos,
                                                                               pos_to=endzone_position))  # Move in finish
                 for card in player.list_card:
                     if card.rank == '7':
@@ -508,21 +509,13 @@ class Dog(Game):
 
         # Check if the move is valid
         if pos_to not in valid_positions:
-            print(f"c:Invalid move: position {pos_to} is not reachable using card {card.rank}. Valid: {valid_positions}")
+            print(f"Invalid move: position {pos_to} is not reachable using card {card.rank}. Valid: {valid_positions}")
             return False
 
         # Handle collision
         collision_resolved = self.handle_collision(pos_to)
         if not collision_resolved:
             return False
-
-        # Handle finishing line rules
-        finish_positions = board["finishes"][self.state.list_player.index(player)]
-        if marble.pos in finish_positions and pos_to in finish_positions:
-            # Ensure no overtaking inside the finish line
-            if pos_to > max(m.pos for m in player.list_marble if m.pos in finish_positions):
-                print(f"Invalid move: cannot overtake within the finish line to position {pos_to}.")
-                return False
 
         # Just update the marble's position
         marble.pos = pos_to
