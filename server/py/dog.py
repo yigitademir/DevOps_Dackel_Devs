@@ -627,9 +627,7 @@ class Dog(Game):
                             action.pos_to is not None):
                             print("save on 0", action.pos_from, start_position, action.pos_to)
                             relative_pos_from = action.pos_from - 64
-                            if(action.pos_from is not None and
-                                action.pos_to is not None and
-                                relative_pos_from < start_position <= action.pos_to):
+                            if relative_pos_from < start_position <= action.pos_to:
                                 print("Invalid move - overtaking own save marble")
                                 return False
 
