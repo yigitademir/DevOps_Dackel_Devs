@@ -573,6 +573,58 @@ class TestDogGame:
                 found = self.get_idx_marble(player=player, pos=pos_to) != -1
                 assert found
 
+    def test_move_with_SEVEN_multiple_steps_6(self):
+        """Test 034: Test move with card SEVEN into finish [5 point]"""
+
+        steps_split = [5, 2]
+        list_card = [Card(suit='♣', rank='7'), Card(suit='♦', rank='7'), Card(suit='♥', rank='7'), Card(suit='♠', rank='7')]
+
+        for card in list_card:
+
+            game = Dog()
+            state = game.get_state()
+
+            pos_from = 13
+            card_seven_steps_remaining = 7
+            card_active = card
+            idx_player_active = 1
+            game.state.cnt_round = 0
+            game.state.idx_player_started = idx_player_active
+            game.state.idx_player_active = idx_player_active
+            game.state.bool_card_exchanged = True
+            player = state.list_player[idx_player_active]
+            player.list_card = [card]
+            marble = player.list_marble[0]
+            marble.pos = pos_from
+            marble.is_save = False
+            game.set_state(state)
+
+            for steps in steps_split:
+
+                pos_to = 77 if steps == 5 else 79
+                action = Action(card=card, pos_from=pos_from, pos_to=pos_to)
+                game.apply_action(action)
+
+                card_seven_steps_remaining -= steps
+
+                state = game.get_state()
+
+                found = False
+                player = game.state.list_player[idx_player_active]
+                found = self.get_idx_marble(player=player, pos=pos_to) != -1
+                assert found
+
+                if card_seven_steps_remaining == 0:
+                    idx_player_active += 1
+                    card_active = None
+
+                assert game.state.idx_player_active == idx_player_active
+
+                assert game.state.card_active == card_active
+
+                pos_from = pos_to
+
+
 # --- Helper functions --------
 
     def get_idx_marble(self, player: PlayerState, pos: int) -> int:
