@@ -322,6 +322,33 @@ class Dog(Game):
                                                         actions.append(Action(card=card, pos_from=marble.pos,
                                                                               pos_to=endzone_position))  # Action to move to finish
 
+                                    if card.rank == '7':
+                                        # Need to know number of all marbles outside of kennel
+                                        marbles_for_split_cnt = len(marbles_outside_of_kennel)
+                                        # Based on that we determine different combinations for card 7
+                                        combinations = self.generate_combinations_seven(self.state.seven_steps_left, marbles_for_split_cnt)
+                                        # Once I determine all the combinations, I need to create corresponding list of actions
+                                        for combination in combinations:
+                                            for move in combination:
+                                                for marble in marbles_outside_of_kennel:
+                                                    # pos_from = marble.pos
+                                                    # new_position = (pos_from + move) % len(Dog.BOARD["common_track"])
+                                                    # actions.append(Action(card=card, pos_from=pos_from, pos_to=new_position))
+                                                    # Loop through all possible moves for the card
+                                                    for submove in Dog.RANK_ACTIONS[card.rank].get("moves", []): # type: ignore
+                                                        new_position = (marble.pos + submove) % len(Dog.BOARD["common_track"])
+                                                        actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+
+                                                        # Check if the marble has passed its start position and if it's eligible to move to the finish
+                                                        endzone_position = None  # Initialize variable safely
+                                                        if not marble.is_save:  # Passed start
+                                                            if (new_position - move) <= start_position < new_position:  # would move over or from start position
+                                                                steps_passed_start = (new_position - start_position)
+                                                                if 0 < steps_passed_start <= 4:
+                                                                    endzone_position = finish_position[steps_passed_start - 1]
+                                                                    actions.append(Action(card=card, pos_from=marble.pos,
+                                                                                            pos_to=endzone_position))  # Action to move to finish
+
                                 # Actions for Marble in the finish
                                 if marble.pos in finish_position:
                                     for move in Dog.RANK_ACTIONS[card.rank].get("moves", []):
@@ -330,24 +357,8 @@ class Dog(Game):
                                         if move <= max_moves:
                                             endzone_position = marble.pos + move  
                                             actions.append(Action(card=card, pos_from=marble.pos,
-                                                                              pos_to=endzone_position))  # Move in finish
-                for card in player.list_card:
-                    if card.rank == '7':
-                        # Need to know number of all marbles outside of kennel
-                        marbles_for_split_cnt = len(marbles_outside_of_kennel)
-                        # Based on that we determine different combinations for card 7
-                        combinations = self.generate_combinations_seven(self.state.seven_steps_left, marbles_for_split_cnt)
-                        # Once I determine all the combinations, I need to create corresponding list of actions
-                        for combination in combinations:
-                            for move in combination:
-                                for marble in marbles_outside_of_kennel:
-                                    # pos_from = marble.pos
-                                    # new_position = (pos_from + move) % len(Dog.BOARD["common_track"])
-                                    # actions.append(Action(card=card, pos_from=pos_from, pos_to=new_position))
-                                    # Loop through all possible moves for the card
-                                    for submove in Dog.RANK_ACTIONS[card.rank].get("moves", []): # type: ignore
-                                        new_position = (marble.pos + submove) % len(Dog.BOARD["common_track"])
-                                        actions.append(Action(card=card, pos_from=marble.pos, pos_to=new_position))  # Add valid action
+                                                                              pos_to=endzone_position))  # Move in finish                        
+
         # Validation of actions
         validated_actions: List[Action] = []
 
@@ -386,7 +397,6 @@ class Dog(Game):
         """
 
         current_player = self.state.list_player[self.state.idx_player_active]
-        
 
         if action is None:
             # No valid actions, discard all cards
@@ -435,7 +445,7 @@ class Dog(Game):
                 teammate = self.state.list_player[teammate_index]
 
                 marble = next((m for m in current_player.list_marble + teammate.list_marble
-                               if m.pos == action.pos_from), None) # pylint: disable=line-too-long
+                               if m.pos == action.pos_from), None)
 
                 if marble:
                     # Determine which player the marble belongs to
@@ -451,7 +461,13 @@ class Dog(Game):
                         movement_success = self.move_marble(marble, action.card, action.pos_to, marble_owner)
                         if movement_success:
                             print(f"Marble moved (card 7) from {action.pos_from} to {action.pos_to} by {marble_owner.name}.")
-                            self.state.seven_steps_left -= (action.pos_to - action.pos_from)
+                            if action.pos_from in Dog.BOARD["common_track"] and action.pos_to in Dog.BOARD["finishes"][self.state.idx_player_active]:
+                                steps_to_start = (Dog.BOARD["starts"][self.state.idx_player_active] - action.pos_from) % len(Dog.BOARD["common_track"])
+                                steps_from_start_to_finish = (Dog.BOARD["finishes"][self.state.idx_player_active].index(action.pos_to)) + 1
+                                steps_taken = steps_to_start + steps_from_start_to_finish
+                                self.state.seven_steps_left -= steps_taken
+                            else:
+                                self.state.seven_steps_left -= (action.pos_to - action.pos_from)                            
                             self.send_back_home_overtook_by_seven(action, marble)
                         else:
                             print(f"Invalid move (card 7) from {action.pos_from} to {action.pos_to}.")
@@ -578,7 +594,7 @@ class Dog(Game):
                     ]
                     other_marble.pos = empty_kennel_positions[0]  # First available kennel slot
                     print(f"Collision! {other_player.name}'s marble sent back to kennel at position "
-                          f"{other_marble.pos}.") # pylint: disable=line-too-long
+                          f"{other_marble.pos}.")
                     return True
         return True
 
