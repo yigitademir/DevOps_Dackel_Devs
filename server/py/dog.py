@@ -355,7 +355,10 @@ class Dog(Game):
                                 if marble.pos in finish_position:
                                     for move in Dog.RANK_ACTIONS[card.rank].get("moves", []): # type: ignore
                                         idx_finish = finish_position.index(marble.pos)
-                                        max_moves = 3 - idx_finish
+                                        if self.state.seven_steps_left >= 3:
+                                            max_moves = 3 - idx_finish
+                                        else:
+                                            max_moves = self.state.seven_steps_left
                                         if move <= max_moves:
                                             endzone_position = marble.pos + move
                                             actions.append(Action(card=card,

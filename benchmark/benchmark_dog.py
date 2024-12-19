@@ -1239,6 +1239,7 @@ class DogBenchmark(benchmark.Benchmark):
                     list_action_found = self.game_server.get_list_action()
                     hint = str_states
                     hint += f'Error: Too many steps possible in finish.'
+                    hint += f'List actions found {list_action_found}'
                     assert len(list_action_found) == 2, hint
 
                 pos_to = 76 if steps == 5 else 78
